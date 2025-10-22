@@ -161,6 +161,8 @@ void listenAutopilot() {
             case 8:
                 snprintf(message, 256, "type=obstacle&event=%s", data + 1);
                 break;
+            case 9:
+                snprintf(message, 256, "type=cargo_servo=%s", data + 1);
             default:
                 break;
             }

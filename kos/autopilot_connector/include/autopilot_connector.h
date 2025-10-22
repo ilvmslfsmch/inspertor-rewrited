@@ -169,25 +169,14 @@ int isArmRequested();
  * \warning Synchronous method. Ends only when bytes are received from the autopilot.
  * \param[in] byteNum Number of expected bytes.
  * \param[out] bytes Received bytes.
- * \return Returns 1 on successful bytes receive, 0 otherwise.
+ * \return Returns number of read bytes.
  * \~Russian Ожидает получения указанного числа байтов от автопилота.
  * \warning Синхронный метод. Завершится, лишь когда байты от автопилота будут получены.
  * \param[in] byteNum Ожидаемое число байтов.
  * \param[out] bytes Полученные байты.
- * \return Возвращает 1 при успешном получении байтов, 0 -- иначе.
+ * \return Возвращает количество прочитанных байтов.
  */
-int getAutopilotBytes(uint32_t byteNum, uint8_t* bytes);
-/**
- * \~English Waits for a message from the autopilot.
- * \warning Synchronous method. Ends only when a message is received from the autopilot.
- * \param[out] command Received message type.
- * \return Returns 1 on successful message receive, 0 otherwise.
- * \~Russian Ожидает сообщения от автопилота.
- * \warning Синхронный метод. Завершится, лишь когда сообщение от автопилота будет получено.
- * \param[out] command Тип полученного сообщения.
- * \return Возвращает 1 при успешном получении сообщения, 0 -- иначе.
- */
-int getAutopilotCommand(uint8_t& command);
+ssize_t readBytes(uint32_t byteNum, uint8_t* bytes);
 
 /**
  * \~English Sends raw bytes to the autopilot.

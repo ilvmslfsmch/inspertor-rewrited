@@ -91,7 +91,7 @@ int initConnection() {
     return 1;
 }
 
-int getAutopilotBytes(uint32_t byteNum, uint8_t* bytes) {
+ssize_t readBytes(uint32_t byteNum, uint8_t* bytes) {
     rtl_size_t readBytes;
     Retcode rc = UartRead(autopilotUartHandler, bytes, byteNum, NULL, &readBytes);
     if (rc != rcOk) {
@@ -100,49 +100,8 @@ int getAutopilotBytes(uint32_t byteNum, uint8_t* bytes) {
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
-    else if (readBytes != byteNum) {
-        char logBuffer[256] = {0};
-        snprintf(logBuffer, 256, "Failed to read %ld bytes from autopilot: %ld bytes were received", byteNum, readBytes);
-        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
-        return 0;
-    }
-    return 1;
-}
-
-int getAutopilotCommand(uint8_t& command) {
-    uint8_t message[sizeof(AutopilotCommandMessage)];
-    char logBuffer[256] = {0};
-    for (int i = 0; i < AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE; i++) {
-        Retcode rc = UartReadByte(autopilotUartHandler, message + i);
-        if (rc != rcOk) {
-            snprintf(logBuffer, 256, "Failed to read from UART %s (" RETCODE_HR_FMT ")", autopilotUart, RETCODE_HR_PARAMS(rc));
-            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
-            return 0;
-        }
-
-        if (message[i] != AutopilotCommandMessageHead[i]) {
-            logEntry("Received message has an unknown header", ENTITY_NAME, LogLevel::LOG_WARNING);
-            return 0;
-        }
-    }
-
-    ssize_t expectedSize = sizeof(AutopilotCommandMessage) - AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE;
-    rtl_size_t readBytes;
-    Retcode rc = UartRead(autopilotUartHandler, (rtl_uint8_t*)(message + AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE),
-        expectedSize, NULL, &readBytes);
-    if (rc != rcOk) {
-        snprintf(logBuffer, 256, "Failed to read from UART %s (" RETCODE_HR_FMT ")", autopilotUart, RETCODE_HR_PARAMS(rc));
-        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
-        return 0;
-    }
-    else if (readBytes != expectedSize) {
-        snprintf(logBuffer, 256, "Failed to read message from autopilot: %ld bytes were expected, %ld bytes were received", expectedSize, readBytes);
-        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
-        return 0;
-    }
-
-    command = (uint8_t)(((AutopilotCommandMessage*)message)->command);
-    return 1;
+    else
+        return (ssize_t)(readBytes);
 }
 
 int sendAutopilotBytes(uint8_t* bytes, ssize_t size) {

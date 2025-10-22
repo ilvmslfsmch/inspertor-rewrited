@@ -55,42 +55,8 @@ int initConnection() {
     return 1;
 }
 
-int getAutopilotBytes(uint32_t byteNum, uint8_t* bytes) {
-    ssize_t readBytes = read(autopilotSocket, bytes, byteNum);
-    if (readBytes != byteNum) {
-        char logBuffer[256] = {0};
-        snprintf(logBuffer, 256, "Failed to read %ld bytes from autopilot: %ld bytes were received", byteNum, readBytes);
-        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
-        return 0;
-    }
-    return 1;
-}
-
-int getAutopilotCommand(uint8_t& command) {
-    uint8_t message[sizeof(AutopilotCommandMessage)];
-    for (int i = 0; i < AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE; i++) {
-        if (read(autopilotSocket, message + i, 1) != 1) {
-            logEntry("Failed to read from socket", ENTITY_NAME, LogLevel::LOG_WARNING);
-            return 0;
-        }
-
-        if (message[i] != AutopilotCommandMessageHead[i]) {
-            logEntry("Received message has an unknown header", ENTITY_NAME, LogLevel::LOG_WARNING);
-            return 0;
-        }
-    }
-
-    ssize_t expectedSize = sizeof(AutopilotCommandMessage) - AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE;
-    ssize_t readBytes = read(autopilotSocket, message + AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE, expectedSize);
-    if (readBytes != expectedSize) {
-        char logBuffer[256] = {0};
-        snprintf(logBuffer, 256, "Failed to read message from autopilot: %ld bytes were expected, %ld bytes were received", expectedSize, readBytes);
-        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
-        return 0;
-    }
-
-    command = (uint8_t)(((AutopilotCommandMessage*)message)->command);
-    return 1;
+ssize_t readBytes(uint32_t byteNum, uint8_t* bytes) {
+    return read(autopilotSocket, bytes, byteNum);
 }
 
 int sendAutopilotBytes(uint8_t* bytes, ssize_t size) {

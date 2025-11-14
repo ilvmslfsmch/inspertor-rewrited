@@ -100,3 +100,43 @@ def revise_mission(client, userdata, msg, **kwargs):
             mqtt.publish_message(MQTTTopic.NMISSION_RESPONSE.format(id=id), response[0])
     except Exception as e:
         print(f"Error handling mission message: {e}")
+
+@mqtt.topic(MQTTTopic.DM_SEND)
+def direct_message(client, userdata, msg, **kwargs):
+    """
+    Перенаправляет личные сообщения с одного дрона на другой, подписывая ключом ОРВД.
+    """
+    try:
+        send_id = kwargs.get('send_id')
+        recv_id = kwargs.get('recv_id')
+
+        if not send_id or not recv_id:
+            print("Sender or receiver ID not found in topic for direct message.")
+            return
+
+        query_string = msg.payload.decode()
+        query_params = parse_qs(query_string)
+        payload = {k: v[0] for k, v in query_params.items()}
+        
+        message = payload.get('message')
+        sig = payload.get('sig')
+
+        if not message or not sig:
+            print(f"Invalid payload for DM: {query_string}")
+            return
+            
+        sender_key_group = f"{KeyGroup.KOS}{send_id}"
+        data_to_verify = f"message={message}"
+        
+        if not verify(data_to_verify, int(sig, 16), sender_key_group):
+            print(f"DM signature verification failed for sender {send_id}")
+            return
+            
+        orvd_signature = hex(sign(data_to_verify, KeyGroup.ORVD))[2:]
+        new_payload = f"{data_to_verify}#{orvd_signature}"
+        
+        topic = MQTTTopic.DM_RECV.format(recv_id=recv_id, send_id=send_id)
+        mqtt.publish_message(topic, new_payload)
+
+    except Exception as e:
+        print(f"Error handling direct message: {e}")

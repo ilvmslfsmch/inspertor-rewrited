@@ -49,6 +49,7 @@ class MQTTTopic:
     NMISSION_REQUEST = 'api/nmission/request/{id}'
     ARM_REQUEST = 'api/arm/request/{id}'
     EVENTS = 'api/events/{id}'
+    DM_SEND = 'api/dm/{send_id}/send/{recv_id}'
     
     # sendable
     PING = 'ping/{id}'
@@ -59,6 +60,7 @@ class MQTTTopic:
     FMISSION_KOS = 'api/fmission_kos/{id}'
     AUTH = 'api/auth/{id}'
     CONNECTION_STATUS = 'api/connection_status'
+    DM_RECV = 'api/dm/{recv_id}/recv/{send_id}'
     
 class APIRoute:
     NMISSION = '/api/nmission'

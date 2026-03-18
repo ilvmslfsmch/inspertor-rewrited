@@ -10,10 +10,15 @@ else()
     set (SERVER_CONNECTOR_SRC "src/server_connector_offline.cpp")
 endif()
 
-add_executable (ServerConnector "src/main.cpp" "src/server_connector.cpp" ${SERVER_CONNECTOR_SRC}
-    "src/server_connector_interface.cpp" "../shared/src/initialization_interface.cpp"
-    "../shared/src/ipc_messages_initialization.cpp" "../shared/src/ipc_messages_logger.cpp")
-add_dependencies (ServerConnector server_connector_edl_files)
+add_executable (ServerConnector
+    "src/main.cpp"
+    "src/server_connector.cpp"
+    ${SERVER_CONNECTOR_SRC}
+    "src/server_connector_interface.cpp"
+    "../shared/src/initialization_interface.cpp"
+    "../shared/src/ipc_messages_initialization.cpp"
+    "../shared/src/ipc_messages_logger.cpp")
+add_dependencies (ServerConnector SERVER_CONNECTOR_EDL)
 
 target_compile_definitions (ServerConnector PRIVATE ENTITY_NAME="Server Connector")
 target_compile_definitions (ServerConnector PRIVATE BOARD_ID="${BOARD_ID}")
@@ -25,9 +30,11 @@ if (SERVER)
         MQTT_USERNAME="${MQTT_USERNAME}"
         MQTT_PASSWORD="${MQTT_PASSWORD}"
     )
-    target_link_libraries (ServerConnector vfs::client ${wpa_CLIENT_LIB} ${mosquitto_CXX_LIB})
+    bind_nk_targets (ServerConnector vfs::client ${wpa_CLIENT_LIB} ${mosquitto_CXX_LIB} SERVER_CONNECTOR_EDL)
+    set_target_properties (ServerConnector PROPERTIES vfs::entity_REPLACEMENT "")
 else ()
     target_compile_definitions (ServerConnector PRIVATE NO_SERVER)
+    bind_nk_targets (ServerConnector SERVER_CONNECTOR_EDL)
 endif()
 
 if (INSPECTOR_ROLE)

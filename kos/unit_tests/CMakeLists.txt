@@ -17,11 +17,10 @@ add_executable (UnitTests "src/unit_tests.cpp" "src/mock.cpp"
     "${NAVIGATION_SYSTEM_DIR}/src/navigation_system.cpp"
     "${PERIPHERY_CONTROLLER_DIR}/src/periphery_controller.cpp")
 
-add_dependencies (UnitTests unit_tests_edl_file)
+add_dependencies (UnitTests UNIT_TESTS_EDL)
 
 target_compile_definitions (UnitTests PRIVATE ENTITY_NAME="Unit Tests")
 target_compile_definitions (UnitTests PRIVATE BOARD_ID="id=${BOARD_ID}")
 
 target_compile_features (UnitTests PRIVATE cxx_std_17)
-
 target_link_libraries (UnitTests vfs::client MbedTLS::mbedtls gtest ${CMAKE_THREAD_LIBS_INIT})

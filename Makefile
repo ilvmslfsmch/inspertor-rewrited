@@ -10,13 +10,10 @@
 ## KasperskyOS Community Edition SDK который можно скачать с сайта
 ## https://os.kaspersky.ru/development/
 ## Переменная SDK_FOLDER_NAME указывает имя папки в /opt где установлен SDK
-SDK_FOLDER_NAME=KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166
+SDK_FOLDER_NAME=KasperskyOS-Community-Edition-Qemu-1.4.0.102
 ## Переменная SDK_PKG_NAME указывает имя пакета с Kaspersky OS CE SDK
-SDK_PKG_NAME=KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166_ru.deb
+SDK_PKG_NAME=KasperskyOS-Community-Edition-Qemu-1.4.0.102_ru.deb
 ## -----------------------------------------------------------------------------
-
-# SDK_FOLDER_NAME=KasperskyOS-Community-Edition-RaspberryPi4b-wifi
-# SDK_PKG_NAME=KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0_amd64.deb
 
 help: ## Покажет эту помощь
 	@sed -ne '/@sed/!s/^## //p' $(MAKEFILE_LIST)

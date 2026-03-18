@@ -13,16 +13,16 @@ set (ENTITIES
         PeripheryController
         ServerConnector
         Logger
-        ${precompiled_vfsVfsSdCardFs}
-        ${precompiled_vfsVfsNet}
-        ${rump_DHCPCD_ENTITY}
+        precompiled_vfs::VfsSdCardFs
+        precompiled_vfs::VfsNet
+        rump::dhcpcd_entity
         ${wpa_SUPPLICANT_ENTITY}
         KlogStorageEntity
 )
 
 
 # Generate PAL tests.
-set_target_properties (${precompiled_vfsVfsSdCardFs}
+set_target_properties (precompiled_vfs::VfsSdCardFs
 PROPERTIES
     EXTRA_ENV "
         VFS_FILESYSTEM_BACKEND: server:kl.VfsSdCardFs"
@@ -44,7 +44,7 @@ add_kss_pal_qemu_tests (
         klog_edl_files
     ENTITIES ${ENTITIES}
     CUSTOM_VFS
-        ${precompiled_vfsVfsSdCardFs}
+        precompiled_vfs::VfsSdCardFs
     ENV_VARS
         VFS_FILESYSTEM_BACKEND=client:kl.VfsSdCardFs
     )

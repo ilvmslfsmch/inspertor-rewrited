@@ -19,10 +19,10 @@ target_link_libraries (KlogEntityQemu ${klog_SYSTEM_AUDIT_LIB})
 add_dependencies (KlogEntityQemu klog_edl_files)
 
 find_program (NTPD_ENTITY
-              NAMES "ntpd" REQUIRED
-              NO_CMAKE_PATH
-              NO_CMAKE_ENVIRONMENT_PATH
-              NO_SYSTEM_ENVIRONMENT_PATH)
+                NAMES "ntpd" REQUIRED
+                NO_CMAKE_PATH
+                NO_CMAKE_ENVIRONMENT_PATH
+                NO_SYSTEM_ENVIRONMENT_PATH)
 
 set (ENTITIES
         AutopilotConnector
@@ -32,15 +32,18 @@ set (ENTITIES
         PeripheryController
         ServerConnector
         Logger
-        ${precompiled_vfsVfsSdCardFs}
+        precompiled_vfs::VfsSdCardFs
+        precompiled_vfs::VfsNet
         ${NTPD_ENTITY}
         KlogStorageEntity)
 set (FILES)
 
-set_target_properties (${precompiled_vfsVfsSdCardFs} PROPERTIES
-    EXTRA_ARGS "\
+set_target_properties (precompiled_vfs::VfsSdCardFs PROPERTIES
+    EXTRA_ARGS "
     - -l
-    - devfs /dev devfs 0")
+    - devfs /dev devfs 0
+    - -l
+    - romfs /etc romfs ro")
 
 set (DHCPCD_ENV "
     VFS_FILESYSTEM_BACKEND: client{fs->net}:kl.VfsSdCardFs
@@ -49,20 +52,16 @@ set (DHCPCD_ENV "
 set (DHCPCD_ARGS "\
     - '-4'
     - '-f'
-    - /etc/dhcpcd.conf")
+    - /resources/hdd/etc/dhcpcd.conf")
 
 if (SIMULATION OR SERVER)
-    set_target_properties (${precompiled_vfsVfsNet} PROPERTIES
-        EXTRA_ARGS "\
+    set_target_properties (precompiled_vfs::VfsNet PROPERTIES
+        EXTRA_ARGS "
         - -l
-        - devfs /dev devfs rw
+        - devfs /dev devfs 0
         - -l
-        - ramfs /tmp ramfs rw
-        - -l
-        - romfs /etc romfs ro
-        - -l
-        - ramfs /var ramfs rw")
-     set_target_properties (${precompiled_vfsVfsSdCardFs} PROPERTIES
+        - romfs /etc romfs ro")
+    set_target_properties (precompiled_vfs::VfsSdCardFs PROPERTIES
         EXTRA_ARGS "\
         - -l
         - devfs /dev devfs rw
@@ -73,25 +72,25 @@ if (SIMULATION OR SERVER)
         - -l
         - ramfs /var ramfs rw")
 
-    set_target_properties (${rump_DHCPCD_ENTITY} PROPERTIES
-        DEPENDS_ON_ENTITY "${precompiled_vfsVfsSdCardFs};${precompiled_vfsVfsNet}"
+    set_target_properties (rump::dhcpcd_entity PROPERTIES
+        DEPENDS_ON_ENTITY "precompiled_vfs::VfsSdCardFs;precompiled_vfs::VfsNet"
         EXTRA_ENV ${DHCPCD_ENV}
         EXTRA_ARGS ${DHCPCD_ARGS})
 
     file(COPY_FILE ${CMAKE_SOURCE_DIR}/resources/hdd/etc/ntp.conf.in ${CMAKE_SOURCE_DIR}/resources/hdd/etc/ntp.conf)
     file(APPEND ${CMAKE_SOURCE_DIR}/resources/hdd/etc/ntp.conf "server ${NTP_IP} minpoll 3 maxpoll 9 iburst trust")
 
-    list(APPEND ENTITIES ${precompiled_vfsVfsSdCardFs} ${precompiled_vfsVfsNet} ${rump_DHCPCD_ENTITY})
+    list(APPEND ENTITIES precompiled_vfs::VfsSdCardFs precompiled_vfs::VfsNet rump::dhcpcd_entity)
     list(APPEND FILES ${CMAKE_SOURCE_DIR}/resources/hdd/etc/dhcpcd.conf
-	              ${CMAKE_SOURCE_DIR}/resources/hdd/var/db/dhcpcd/.gitkeep
-		      ${CMAKE_SOURCE_DIR}/resources/hdd/etc/ntp.conf
-		      ${CMAKE_SOURCE_DIR}/resources/hdd/etc/hosts
-		      )
+	        ${CMAKE_SOURCE_DIR}/resources/hdd/var/db/dhcpcd/.gitkeep
+		    ${CMAKE_SOURCE_DIR}/resources/hdd/etc/ntp.conf
+	        ${CMAKE_SOURCE_DIR}/resources/hdd/etc/hosts
+		)
 endif ()
 
 if (SERVER)
     if (NOT SIMULATION)
-        set_target_properties (${rump_DHCPCD_ENTITY} PROPERTIES
+        set_target_properties (rump::dhcpcd_entity PROPERTIES
             DEPENDS_ON_ENTITY ""
             EXTRA_CONNECTIONS "\
         - target: kl.VfsNet
@@ -100,7 +99,7 @@ if (SERVER)
             VFS_FILESYSTEM_BACKEND: client:kl.VfsNet
             VFS_NETWORK_BACKEND: client:kl.VfsNet"
             EXTRA_ARGS ${DHCPCD_ARGS})
-        set_target_properties (${precompiled_vfsVfsNet} PROPERTIES
+        set_target_properties (precompiled_vfs::VfsNet PROPERTIES
         DEPENDS_ON_ENTITY "${entropy_ENTITY};dnet_brcmfmac::server;${dnet_ENTITY}")
         set_target_properties (${wpa_SUPPLICANT_ENTITY} PROPERTIES
             DEPENDS_ON_ENTITY ""
@@ -160,14 +159,15 @@ if (SIMULATION)
     set (QEMU_FLAGS "-drive file=${FS_IMAGE},if=sd,format=raw")
     set (QEMU_ENV "QEMU_AUDIO_DRV=none")
     build_kos_qemu_image (kos-qemu-image
-                        EINIT_ENTITY EinitQemu
-                        QEMU_FLAGS ${QEMU_FLAGS}
-                        QEMU_ENV ${QEMU_ENV}
-                        QEMU_DEPENDENCIES ${FS_IMAGE}
-                        CONNECTIONS_CFG ${CONNECITONS_FILE}
-                        SECURITY_PSL ${SECURITY_FILE}
-                        KLOG_ENTITY KlogEntityQemu
-                        IMAGE_FILES ${ENTITIES} ${FILES})
+                            EINIT_ENTITY            EinitQemu
+                            CONNECTIONS_CFG         ${CONNECITONS_FILE}
+                            SECURITY_PSL            ${SECURITY_FILE}
+                            KLOG_ENTITY             KlogEntityQemu
+                            GINGER_ENABLE           TRUE
+                            GINGER_DEFINITIONS      ${GINGER_DEFINITIONS}
+                            QEMU_FLAGS              "${QEMU_FLAGS}"
+                            QEMU_DEPENDENCIES       "${FS_IMAGE}"
+                            IMAGE_FILES             ${ENTITIES} ${FILES})
     target_link_libraries (KlogEntityQemu kssaudit)
 else ()
     set (INIT_KlogEntity_PATH "KlogEntityHw")

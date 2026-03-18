@@ -4,38 +4,40 @@
  * \~Russian \brief Реализация методов-оберток для отправки IPC-сообщений компоненту Logger.
  */
 
-#include "../include/ipc_messages_logger.h"
-#include "../include/initialization_interface.h"
+#include <iostream>
+#include <string>
 
-#include <string.h>
+#include <kosipc/api.h>
+
+#include "../include/ipc_messages_logger.h"
 
 #define NK_USE_UNQUALIFIED_NAMES
-#include <drone_controller/LoggerInterface.idl.h>
+#include <drone_controller/LoggerInterface.idl.cpp.h>
+
+using namespace kosipc::stdcpp;
+using namespace drone_controller;
+
 
 int logEntry(char* entry, char* entity, LogLevel level) {
-    NkKosTransport transport;
-    nk_iid_t riid;
-    initSenderInterface("logger_connection", "drone_controller.Logger.interface", transport, riid);
 
-    struct LoggerInterface_proxy proxy;
-    LoggerInterface_proxy_init(&proxy, &transport.base, riid);
-
-    LoggerInterface_Log_req req;
-    LoggerInterface_Log_res res;
-    char reqBuffer[LoggerInterface_Log_req_arena_size];
-    struct nk_arena reqArena = NK_ARENA_INITIALIZER(reqBuffer, reqBuffer + sizeof(reqBuffer));
-    nk_arena_reset(&reqArena);
-
+    // TODO: rewrite without PureClient
+    uint8_t success;
+    kosipc::Application app = kosipc::MakeApplicationPureClient();
+    auto proxy              = app.MakeProxy<LoggerInterface>(kosipc::ConnectStaticChannel("logger_connection", "interface"));
+    // TODO: rewrite in cpp way
     char message[MAX_LOG_BUFFER + 1] = {0};
-    snprintf(message, MAX_LOG_BUFFER, "[%s] %s", entity, entry);
+    std::snprintf(message, MAX_LOG_BUFFER, "[%s] %s", entity, entry);
 
-    nk_uint32_t len = strlen(message);
-    nk_char_t *msg = nk_arena_alloc(nk_char_t, &reqArena, &(req.logEntry), len + 1);
-    if ((msg == NULL) || (len > LoggerInterface_Log_req_arena_size))
+    try {
+        proxy->Log(std::string(message), (uint8_t)level, success);
+    }
+    catch (...)
+    {
+        std::cerr << "Exception on proxy->Log request: message=" 
+            << std::string(message) << ", level=" << level << std::endl;
         return 0;
-    strncpy(msg, message, len);
+    }
 
-    req.logLevel = (uint8_t)level;
+    return 1;
 
-    return ((LoggerInterface_Log(&proxy.base, &req, &reqArena, &res, NULL) == rcOk) && res.success);
 }

@@ -2,8 +2,11 @@ cmake_minimum_required (VERSION 3.12)
 
 project (DroneController)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 include (platform)
-initialize_platform (FORCE_STATIC)
+initialize_platform (FORCE_STATIC NO_NEW_VERSION_CHECK)
 if (PLATFORM_SUPPORTS_DYNAMIC_LINKING)
     message (FATAL_ERROR "The solution only supports static libraries")
 endif ()
@@ -66,29 +69,130 @@ include_directories (${koslogger_INCLUDE})
 find_package (logger REQUIRED)
 
 if (UNIT_TESTS)
-    nk_build_edl_files (unit_tests_edl_file NK_MODULE "drone_controller" EDL "resources/UnitTests.edl")
+    add_nk_edl (UNIT_TESTS_EDL  "${CMAKE_SOURCE_DIR}/resources/UnitTests.edl"
+                NK_MODULE       "drone_controller"
+                LANG            "C")
 else ()
-    nk_build_idl_files (initialization_idl_files NK_MODULE "drone_controller" IDL "resources/Initialization.idl")
+    add_nk_idl (INITIALIZATION_IDL "${RESOURCES}/Initialization.idl"
+                NK_MODULE   "drone_controller"
+                LANG        "CXX")
 
-    nk_build_idl_files (logger_idl_files DEPENDS initialization_idl_files NK_MODULE "drone_controller" IDL "resources/LoggerInterface.idl")
 
-    nk_build_idl_files (autopilot_connector_idl_files DEPENDS logger_idl_files NK_MODULE "drone_controller" IDL "resources/AutopilotConnectorInterface.idl")
-    nk_build_idl_files (credential_manager_idl_files DEPENDS logger_idl_files NK_MODULE "drone_controller" IDL "resources/CredentialManagerInterface.idl")
-    nk_build_idl_files (navigation_system_idl_files DEPENDS logger_idl_files NK_MODULE "drone_controller" IDL "resources/NavigationSystemInterface.idl")
-    nk_build_idl_files (periphery_controller_idl_files DEPENDS logger_idl_files NK_MODULE "drone_controller" IDL "resources/PeripheryControllerInterface.idl")
-    nk_build_idl_files (server_connector_idl_files DEPENDS logger_idl_files NK_MODULE "drone_controller" IDL "resources/ServerConnectorInterface.idl")
+    add_nk_idl (LOGGER_IDL "${RESOURCES}/LoggerInterface.idl"
+                NK_MODULE   "drone_controller"
+                LANG        "CXX")
 
-    nk_build_edl_files (logger_edl_files IDL_TARGET logger_idl_files DEPENDS server_connector_idl_files NK_MODULE "drone_controller" EDL "resources/Logger.edl")
-    nk_build_edl_files (autopilot_connector_edl_files IDL_TARGET autopilot_connector_idl_files NK_MODULE "drone_controller" EDL "resources/AutopilotConnector.edl")
-    nk_build_edl_files (credential_manager_edl_files IDL_TARGET credential_manager_idl_files NK_MODULE "drone_controller" EDL "resources/CredentialManager.edl")
-    nk_build_edl_files (navigation_system_edl_files IDL_TARGET navigation_system_idl_files NK_MODULE "drone_controller" EDL "resources/NavigationSystem.edl")
-    nk_build_edl_files (periphery_controller_edl_files IDL_TARGET periphery_controller_idl_files NK_MODULE "drone_controller" EDL "resources/PeripheryController.edl")
-    nk_build_edl_files (server_connector_edl_files IDL_TARGET server_connector_idl_files NK_MODULE "drone_controller" EDL "resources/ServerConnector.edl")
+    add_dependencies (LOGGER_IDL INITIALIZATION_IDL)
+    bind_nk_targets (LOGGER_IDL INITIALIZATION_IDL)
 
-    nk_build_edl_files (flight_controller_edl_files DEPENDS autopilot_connector_idl_files DEPENDS credential_manager_idl_files DEPENDS navigation_system_idl_files DEPENDS periphery_controller_idl_files DEPENDS server_connector_idl_files NK_MODULE "drone_controller" EDL "resources/FlightController.edl")
+
+    add_nk_idl (AUTOPILOT_CONNECTOR_IDL "${RESOURCES}/AutopilotConnectorInterface.idl"
+                NK_MODULE               "drone_controller"
+                LANG                    "CXX")
+
+    add_dependencies (AUTOPILOT_CONNECTOR_IDL LOGGER_IDL)
+    bind_nk_targets (AUTOPILOT_CONNECTOR_IDL LOGGER_IDL)
+
+
+    add_nk_idl (CREDENTIAL_MANAGER_IDL  "${RESOURCES}/CredentialManagerInterface.idl"
+                NK_MODULE               "drone_controller"
+                LANG                    "CXX")
+
+    add_dependencies (CREDENTIAL_MANAGER_IDL LOGGER_IDL)
+    bind_nk_targets (CREDENTIAL_MANAGER_IDL LOGGER_IDL)
+
+
+    add_nk_idl (NAVIGATION_SYSTEM_IDL   "${RESOURCES}/NavigationSystemInterface.idl"
+                NK_MODULE               "drone_controller"
+                LANG                    "CXX")
+
+    add_dependencies (NAVIGATION_SYSTEM_IDL LOGGER_IDL)
+    bind_nk_targets (NAVIGATION_SYSTEM_IDL LOGGER_IDL)
+
+
+    add_nk_idl (PERIPHERY_CONTROLLER_IDL    "${RESOURCES}/PeripheryControllerInterface.idl"
+                NK_MODULE                   "drone_controller"
+                LANG                        "CXX")
+
+    add_dependencies (PERIPHERY_CONTROLLER_IDL LOGGER_IDL)
+    bind_nk_targets (PERIPHERY_CONTROLLER_IDL LOGGER_IDL)
+
+
+    add_nk_idl (SERVER_CONNECTOR_IDL    "${RESOURCES}/ServerConnectorInterface.idl"
+                NK_MODULE               "drone_controller"
+                LANG                    "CXX")
+
+    add_dependencies (SERVER_CONNECTOR_IDL LOGGER_IDL)
+    bind_nk_targets (SERVER_CONNECTOR_IDL LOGGER_IDL)
+
+
+    add_nk_edl (LOGGER_EDL  "${RESOURCES}/Logger.edl"
+                NK_MODULE   "drone_controller"
+                LANG        "CXX")
+
+    add_dependencies (LOGGER_EDL LOGGER_IDL)
+    bind_nk_targets (LOGGER_EDL LOGGER_IDL)
+    add_dependencies (LOGGER_EDL SERVER_CONNECTOR_IDL)
+    bind_nk_targets (LOGGER_EDL SERVER_CONNECTOR_IDL)
+
+
+    add_nk_edl (AUTOPILOT_CONNECTOR_EDL "${RESOURCES}/AutopilotConnector.edl"
+                NK_MODULE               "drone_controller"
+                LANG                    "CXX")
+
+    add_dependencies (AUTOPILOT_CONNECTOR_EDL AUTOPILOT_CONNECTOR_IDL)
+    bind_nk_targets (AUTOPILOT_CONNECTOR_EDL AUTOPILOT_CONNECTOR_IDL)
+
+
+    add_nk_edl (CREDENTIAL_MANAGER_EDL  "${RESOURCES}/CredentialManager.edl"
+                NK_MODULE               "drone_controller"
+                LANG                    "CXX")
+
+    add_dependencies (CREDENTIAL_MANAGER_EDL CREDENTIAL_MANAGER_IDL)
+    bind_nk_targets (CREDENTIAL_MANAGER_EDL CREDENTIAL_MANAGER_IDL)
+
+
+    add_nk_edl (NAVIGATION_SYSTEM_EDL   "${RESOURCES}/NavigationSystem.edl"
+                NK_MODULE               "drone_controller"
+                LANG                    "CXX")
+
+    add_dependencies (NAVIGATION_SYSTEM_EDL NAVIGATION_SYSTEM_IDL)
+    bind_nk_targets (NAVIGATION_SYSTEM_EDL NAVIGATION_SYSTEM_IDL)
+
+
+    add_nk_edl (PERIPHERY_CONTROLLER_EDL    "${RESOURCES}/PeripheryController.edl"
+                NK_MODULE                   "drone_controller"
+                LANG                        "CXX")
+
+    add_dependencies (PERIPHERY_CONTROLLER_EDL PERIPHERY_CONTROLLER_IDL)
+    bind_nk_targets (PERIPHERY_CONTROLLER_EDL PERIPHERY_CONTROLLER_IDL)
+
+
+    add_nk_edl (SERVER_CONNECTOR_EDL    "${RESOURCES}/ServerConnector.edl"
+                NK_MODULE               "drone_controller"
+                LANG                    "CXX")
+
+    add_dependencies (SERVER_CONNECTOR_EDL SERVER_CONNECTOR_IDL)
+    bind_nk_targets (SERVER_CONNECTOR_EDL SERVER_CONNECTOR_IDL)
 
     nk_build_edl_files (klog_edl_files NK_MODULE "drone_controller" EDL "resources/KlogEntity.edl")
+
     nk_build_edl_files (klog_storage_edl_files NK_MODULE "drone_controller" EDL "resources/KlogStorageEntity.edl" NK_FLAGS "--extended-errors")
+
+    add_nk_edl (FLIGHT_CONTROLLER_EDL   "${RESOURCES}/FlightController.edl"
+                NK_MODULE               "drone_controller"
+                LANG                    "CXX")
+
+    add_dependencies (FLIGHT_CONTROLLER_EDL AUTOPILOT_CONNECTOR_IDL)
+    bind_nk_targets (FLIGHT_CONTROLLER_EDL AUTOPILOT_CONNECTOR_IDL)
+    add_dependencies (FLIGHT_CONTROLLER_EDL CREDENTIAL_MANAGER_IDL)
+    bind_nk_targets (FLIGHT_CONTROLLER_EDL CREDENTIAL_MANAGER_IDL)
+    add_dependencies (FLIGHT_CONTROLLER_EDL NAVIGATION_SYSTEM_IDL)
+    bind_nk_targets (FLIGHT_CONTROLLER_EDL NAVIGATION_SYSTEM_IDL)
+    add_dependencies (FLIGHT_CONTROLLER_EDL PERIPHERY_CONTROLLER_IDL)
+    bind_nk_targets (FLIGHT_CONTROLLER_EDL PERIPHERY_CONTROLLER_IDL)
+    add_dependencies (FLIGHT_CONTROLLER_EDL SERVER_CONNECTOR_IDL)
+    bind_nk_targets (FLIGHT_CONTROLLER_EDL SERVER_CONNECTOR_IDL)
 endif ()
 
 add_compile_options (-Wall -Wextra -Wconversion

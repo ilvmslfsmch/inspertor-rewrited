@@ -4,8 +4,13 @@
  * \~Russian \brief Реализация основного цикла компонента AutopilotConnector модуля безопасности.
  */
 
+#include <string>
+#include <cstring>
+#include <iostream>
+#include <kosipc/make_application.h>
+#include <kosipc/serve_static_channel.h>
+
 #include "../include/autopilot_connector.h"
-#include "../include/autopilot_connector_interface.h"
 #include "../../shared/include/initialization_interface.h"
 #include "../../shared/include/ipc_messages_initialization.h"
 
@@ -14,11 +19,110 @@
 #include <thread>
 
 #define NK_USE_UNQUALIFIED_NAMES
-#include <drone_controller/AutopilotConnector.edl.h>
+#include <drone_controller/AutopilotConnector.edl.cpp.h>
+
+using namespace kosipc::stdcpp;
+using namespace drone_controller;
 
 /** \cond */
 std::thread listenThread;
 /** \endcond */
+class IAutopilotConnector : public AutopilotConnectorInterface
+{
+public:
+    void WaitForArmRequest(
+            uint8_t& success                    //  out UInt8 success
+            ) {
+
+        success = isArmRequested();
+
+    }
+
+    void PermitArm(
+            uint8_t& success                    //  out UInt8 success
+            ) {
+
+        success = sendAutopilotCommand(AutopilotCommand::ArmPermit);
+
+    }
+
+    void ForbidArm(
+            uint8_t& success                    //  out UInt8 success
+            ) {
+
+        success = sendAutopilotCommand(AutopilotCommand::ArmForbid);
+
+    }
+
+    void PauseFlight(
+            uint8_t& success                    //  out UInt8 success
+            ) {
+
+        success = sendAutopilotCommand(AutopilotCommand::PauseFlight);
+
+    }
+
+    void ResumeFlight(
+            uint8_t& success                    //  out UInt8 success
+            ) {
+
+        success = sendAutopilotCommand(AutopilotCommand::ResumeFlight);
+
+    }
+
+    void AbortMission(
+            uint8_t& success                    //  out UInt8 success
+            ) {
+
+        success = sendAutopilotCommand(AutopilotCommand::AbortMission);
+
+    }
+
+    void ChangeSpeed(
+            int32_t speed,                      // in SInt32 speed
+            uint8_t& success                    // out UInt8 success
+            ) {
+
+        success = sendAutopilotCommand(AutopilotCommand::ChangeSpeed, speed);
+
+    }
+
+    void ChangeAltitude(
+            int32_t altitude,                   // in SInt32 altitude
+            uint8_t& success                    // out UInt8 success
+            ) {
+
+        success = sendAutopilotCommand(AutopilotCommand::ChangeAltitude, altitude);
+
+    }
+
+    void ChangeWaypoint(
+            int32_t latitude,                   // in SInt32 latitude
+            int32_t longitude,                  // in SInt32 longitude
+            int32_t altitude,                   // in SInt32 altitude
+            uint8_t& success                    // out UInt8 success
+            ) {
+
+        success = sendAutopilotCommand(
+                AutopilotCommand::ChangeWaypoint,
+                latitude,
+                longitude,
+                altitude
+                );
+
+    }
+
+    void SetMission(
+            const std::vector<uint8_t>& mission,// in sequence<UInt8, MaxMissionLength> mission
+            uint32_t size,                      // in UInt32 size
+            uint8_t& success                    // out UInt8 success
+            ) {
+
+        uint8_t m[MaxMissionLength] = {0};
+        std::memcpy(m, mission.data(), mission.size());
+        success = sendAutopilotCommand(AutopilotCommand::SetMission, m, size);
+    }
+};
 
 /**
  * \~English \brief AutopilotConnector component main program entry point.
@@ -49,31 +153,12 @@ int main(void) {
 
     logEntry("Initialization is finished", ENTITY_NAME, LogLevel::LOG_INFO);
 
-    NkKosTransport transport;
-    initReceiverInterface("autopilot_connector_connection", transport);
-
-    AutopilotConnector_entity entity;
-    AutopilotConnector_entity_init(&entity, CreateInitializationImpl(), CreateAutopilotConnectorInterfaceImpl());
-
-    AutopilotConnector_entity_req req;
-    AutopilotConnector_entity_res res;
-    char reqBuffer[AutopilotConnector_entity_req_arena_size];
-    char resBuffer[AutopilotConnector_entity_res_arena_size];
-    struct nk_arena reqArena = NK_ARENA_INITIALIZER(reqBuffer, reqBuffer + sizeof(reqBuffer));
-    struct nk_arena resArena = NK_ARENA_INITIALIZER(resBuffer, resBuffer + sizeof(resBuffer));
-
-    while (true) {
-        nk_req_reset(&req);
-        nk_arena_reset(&reqArena);
-        nk_arena_reset(&resArena);
-        if (nk_transport_recv(&transport.base, &req.base_, &reqArena) == NK_EOK) {
-            AutopilotConnector_entity_dispatch(&entity, &req.base_, &reqArena, &res.base_, &resArena);
-            if (nk_transport_reply(&transport.base, &res.base_, &resArena) != NK_EOK)
-                logEntry("Failed to send a reply to IPC-message", ENTITY_NAME, LogLevel::LOG_WARNING);
-        }
-        else
-            logEntry("Failed to receive IPC-message", ENTITY_NAME, LogLevel::LOG_WARNING);
-    };
+    kosipc::Application app     =  kosipc::MakeApplicationAutodetect();
+    kosipc::components::Root       root;
+    IAutopilotConnector            interface;
+    root.interface              = &interface;
+    kosipc::EventLoop loop      =  app.MakeEventLoop(ServeStaticChannel("autopilot_connector_connection", root));
+    loop.Run();
 
     return EXIT_SUCCESS;
 }

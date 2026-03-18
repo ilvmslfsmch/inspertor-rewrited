@@ -4,8 +4,12 @@
  * \~Russian \brief Реализация основного цикла компонента ServerConnector модуля безопасности.
  */
 
+#include <string>
+#include <iostream>
+#include <kosipc/make_application.h>
+#include <kosipc/serve_static_channel.h>
+
 #include "../include/server_connector.h"
-#include "../include/server_connector_interface.h"
 #include "../../shared/include/initialization_interface.h"
 #include "../../shared/include/ipc_messages_initialization.h"
 
@@ -14,7 +18,76 @@
 #include <unistd.h>
 
 #define NK_USE_UNQUALIFIED_NAMES
-#include <drone_controller/ServerConnector.edl.h>
+#include <drone_controller/ServerConnector.edl.cpp.h>
+
+using namespace kosipc::stdcpp;
+using namespace drone_controller;
+
+
+class IServerConnector : public ServerConnectorInterface
+{
+public:
+    void GetBoardId(
+            uint8_t& success,                   // out UInt8 success
+            std::string& id                     // out string<MaxIdLength> id
+            ){
+
+        //TODO: rewrite to cpp way
+        id = std::string(getBoardName());
+        success = (id.size() > 0);
+
+    }
+
+    void SendRequest(
+            const std::string& query,           // in string<MaxQueryLength> query
+            uint8_t& success,                   // out UInt8 success
+            std::string& response               // out string<MaxResponseLength> response
+            ){
+
+        //TODO: rewrite to cpp way
+        char q[MaxQueryLength + 1] = {0};
+        query.copy(q, query.size() + 1);
+        char r[MaxResponseLength + 1] = {0};
+
+        success = requestServer(q, r, MaxResponseLength + 1);
+        response = std::string(r);
+
+    }
+
+    void PublishMessage(
+            const std::string& topic,           // in string<MaxTopicLength> topic
+            const std::string& publication,     // in string<MaxPublicationLength> publication
+            uint8_t& success                    // out UInt8 success
+            ){
+
+        //TODO: rewrite to cpp way
+        char t[MaxTopicLength + 1] = {0};
+        topic.copy(t, topic.size() + 1);
+        char p[MaxPublicationLength + 1] = {0};
+        publication.copy(p, publication.size() + 1);
+
+        success = publish(t, p);
+
+    }
+
+    void ReceiveSubscription(
+            const std::string& topic,           // in string<MaxTopicLength> topic
+            std::string& subscription,          // out string<MaxSubscriptionLength> subscription
+            uint8_t& success                    // out UInt8 success
+            ){
+
+        //TODO: rewrite to cpp way
+        char t[MaxTopicLength + 1] = {0};
+        topic.copy(t, topic.size() + 1);
+        char s[MaxSubscriptionLength + 1] = {0};
+
+        success = getSubscription(t, s, MaxSubscriptionLength + 1);
+        subscription = std::string(s);
+
+    }
+
+};
+
 
 /**
  * \~English \brief ServerConnector component main program entry point.
@@ -37,31 +110,12 @@ int main(void) {
 
     logEntry("Initialization is finished", ENTITY_NAME, LogLevel::LOG_INFO);
 
-    NkKosTransport transport;
-    initReceiverInterface("server_connector_connection", transport);
-
-    ServerConnector_entity entity;
-    ServerConnector_entity_init(&entity, CreateInitializationImpl(), CreateServerConnectorInterfaceImpl());
-
-    ServerConnector_entity_req req;
-    ServerConnector_entity_res res;
-    char reqBuffer[ServerConnector_entity_req_arena_size];
-    char resBuffer[ServerConnector_entity_res_arena_size];
-    struct nk_arena reqArena = NK_ARENA_INITIALIZER(reqBuffer, reqBuffer + sizeof(reqBuffer));
-    struct nk_arena resArena = NK_ARENA_INITIALIZER(resBuffer, resBuffer + sizeof(resBuffer));
-
-    while (true) {
-        nk_req_reset(&req);
-        nk_arena_reset(&reqArena);
-        nk_arena_reset(&resArena);
-        if (nk_transport_recv(&transport.base, &req.base_, &reqArena) == NK_EOK) {
-            ServerConnector_entity_dispatch(&entity, &req.base_, &reqArena, &res.base_, &resArena);
-            if (nk_transport_reply(&transport.base, &res.base_, &resArena) != NK_EOK)
-                logEntry("Failed to send a reply to IPC-message", ENTITY_NAME, LogLevel::LOG_WARNING);
-        }
-        else
-            logEntry("Failed to receive IPC-message", ENTITY_NAME, LogLevel::LOG_WARNING);
-    };
+    kosipc::Application app     =  kosipc::MakeApplicationAutodetect();
+    kosipc::components::Root       root;
+    IServerConnector               interface;
+    root.interface              = &interface;
+    kosipc::EventLoop loop      =  app.MakeEventLoop(ServeStaticChannel("server_connector_connection", root));
+    loop.Run();
 
     return EXIT_SUCCESS;
 }

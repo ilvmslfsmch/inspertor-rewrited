@@ -9,7 +9,7 @@ add_executable (FlightController "src/flight_controller.cpp" "../shared/src/init
     "../shared/src/ipc_messages_credential_manager.cpp" "../shared/src/ipc_messages_navigation_system.cpp"
     "../shared/src/ipc_messages_periphery_controller.cpp" "../shared/src/ipc_messages_server_connector.cpp"
     "../shared/src/ipc_messages_logger.cpp")
-add_dependencies (FlightController flight_controller_edl_files)
+add_dependencies (FlightController FLIGHT_CONTROLLER_EDL)
 
 if (INSPECTOR_ROLE)
     target_sources (FlightController PUBLIC "src/main_inspector.cpp")
@@ -18,4 +18,4 @@ else ()
 endif()
 
 target_compile_definitions (FlightController PRIVATE ENTITY_NAME="Flight Controller")
-target_link_libraries (FlightController MbedTLS::mbedtls ${CMAKE_THREAD_LIBS_INIT})
+bind_nk_targets (FlightController MbedTLS::mbedtls ${CMAKE_THREAD_LIBS_INIT} FLIGHT_CONTROLLER_EDL)

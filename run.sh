@@ -1,9 +1,4 @@
 #! /usr/bin/bash
-export SDK_FOLDER_NAME=KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166
-export SDK_PKG_NAME=KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166_ru.deb
-
-#export SDK_FOLDER_NAME=KasperskyOS-Community-Edition-RaspberryPi4b-wifi
-#export SDK_PKG_NAME=KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0_amd64.deb
 
 source default.env
 rm -f mavproxy/MAVProxy/mav.parm
@@ -42,7 +37,5 @@ fi
 tmux select-pane -t flight_controller:0.0
 tmux split-window -v -t flight_controller
 tmux send-keys -t flight_controller "cd mavproxy/MAVProxy; mavproxy.py --out='127.0.0.1:14550' --out='127.0.0.1:14551' --master='tcp:127.0.0.1:5760' --master='tcp:127.0.0.1:5770' --sitl='127.0.0.1:5501' --sitl='127.0.0.1:5502'" Enter
-#tmux split-window -h -t flight_controller
-#tmux send-keys -t flight_controller "cd mavproxy/MAVProxy; mavproxy.py --out='127.0.0.1:14550' --out='127.0.0.1:14551' --master='tcp:127.0.0.1:5760' --sitl='127.0.0.1:5501'" Enter
 tmux select-pane -t flight_controller:0.0
 tmux attach -t flight_controller

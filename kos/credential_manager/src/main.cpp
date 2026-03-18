@@ -4,8 +4,12 @@
  * \~Russian \brief Реализация основного цикла компонента CredentialManager модуля безопасности.
  */
 
+#include <string>
+#include <iostream>
+#include <kosipc/make_application.h>
+#include <kosipc/serve_static_channel.h>
+
 #include "../include/credential_manager.h"
-#include "../include/credential_manager_interface.h"
 #include "../../shared/include/initialization_interface.h"
 #include "../../shared/include/ipc_messages_initialization.h"
 
@@ -14,8 +18,43 @@
 #include <unistd.h>
 
 #define NK_USE_UNQUALIFIED_NAMES
-#include <drone_controller/CredentialManager.edl.h>
+#include <drone_controller/CredentialManager.edl.cpp.h>
 
+using namespace kosipc::stdcpp;
+using namespace drone_controller;
+
+
+class ICredentialManager : public CredentialManagerInterface
+{
+public:
+    void SignMessage(
+            const std::string& message,         // in string<MaxMessageLength> message
+            uint8_t& success,                   // out UInt8 success
+            std::string& signature              // out string<MaxSignatureLength> signature
+            ) {
+
+        //TODO: Rewrite to cpp way
+        char m[MaxMessageLength + 1] = {0};
+        char s[MaxSignatureLength + 1] = {0};
+        message.copy(m, message.size() + 1);
+        success = getMessageSignature(m, s);
+        signature = std::string(s);
+
+    }
+
+    void CheckSignature(
+            const std::string& message,         // in string<MaxMessageLength> message
+            uint8_t& success,                   // out UInt8 success
+            uint8_t& correct                    // out UInt8 correct
+            ) {
+
+        //TODO: Rewrite to cpp way
+        char m[MaxMessageLength + 1] = {0};
+        message.copy(m, message.size() + 1);
+        success = checkMessageSignature(m, correct);
+
+    }
+};
 /**
  * \~English \brief CredentialManager component main program entry point.
  * \details First, waits for the Logger component to initialize. After that, the saved RSA key
@@ -44,31 +83,12 @@ int main(void) {
 
     logEntry("Initialization is finished", ENTITY_NAME, LogLevel::LOG_INFO);
 
-    NkKosTransport transport;
-    initReceiverInterface("credential_manager_connection", transport);
-
-    CredentialManager_entity entity;
-    CredentialManager_entity_init(&entity, CreateInitializationImpl(), CreateCredentialManagerInterfaceImpl());
-
-    CredentialManager_entity_req req;
-    CredentialManager_entity_res res;
-    char reqBuffer[CredentialManager_entity_req_arena_size];
-    char resBuffer[CredentialManager_entity_res_arena_size];
-    struct nk_arena reqArena = NK_ARENA_INITIALIZER(reqBuffer, reqBuffer + sizeof(reqBuffer));
-    struct nk_arena resArena = NK_ARENA_INITIALIZER(resBuffer, resBuffer + sizeof(resBuffer));
-
-    while (true) {
-        nk_req_reset(&req);
-        nk_arena_reset(&reqArena);
-        nk_arena_reset(&resArena);
-        if (nk_transport_recv(&transport.base, &req.base_, &reqArena) == NK_EOK) {
-            CredentialManager_entity_dispatch(&entity, &req.base_, &reqArena, &res.base_, &resArena);
-            if (nk_transport_reply(&transport.base, &res.base_, &resArena) != NK_EOK)
-                logEntry("Failed to send a reply to IPC-message", ENTITY_NAME, LogLevel::LOG_WARNING);
-        }
-        else
-            logEntry("Failed to receive IPC-message", ENTITY_NAME, LogLevel::LOG_WARNING);
-    };
+    kosipc::Application app     =  kosipc::MakeApplicationAutodetect();
+    kosipc::components::Root       root;
+    ICredentialManager             interface;
+    root.interface              = &interface;
+    kosipc::EventLoop loop      =  app.MakeEventLoop(ServeStaticChannel("credential_manager_connection", root));
+    loop.Run();
 
     return EXIT_SUCCESS;
 }

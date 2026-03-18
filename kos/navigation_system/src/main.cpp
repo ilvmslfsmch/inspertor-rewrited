@@ -4,9 +4,13 @@
  * \~Russian \brief Реализация основного цикла компонента NavigationSystem модуля безопасности.
  */
 
+#include <string>
+#include <cstring>
+#include <iostream>
+#include <kosipc/make_application.h>
+#include <kosipc/serve_static_channel.h>
+
 #include "../include/navigation_system.h"
-#include "../include/navigation_system_interface.h"
-#include "../../shared/include/initialization_interface.h"
 #include "../../shared/include/ipc_messages_initialization.h"
 
 #include <stdio.h>
@@ -15,13 +19,53 @@
 #include <thread>
 
 #define NK_USE_UNQUALIFIED_NAMES
-#include <drone_controller/NavigationSystem.edl.h>
+#include <drone_controller/NavigationSystem.edl.cpp.h>
+
+using namespace kosipc::stdcpp;
+using namespace drone_controller;
 
 /** \cond */
 std::thread sensorThread;
 std::thread senderThread;
 /** \endcond */
 
+class INavigationSystem : public NavigationSystemInterface
+{
+public:
+    void GetCoords(
+            uint8_t& success,                   // out UInt8 success
+            int32_t& lat,                       // out SInt32 lat
+            int32_t& lng,                       // out SInt32 lng
+            int32_t& alt                        // out SInt32 alt
+            ) {
+
+        success = getPosition(lat, lng, alt);
+
+    }
+
+    void GetGpsInfo(
+            uint8_t& success,                   // out UInt8 success
+            int32_t& dop,                       // out SInt32 dop
+            int32_t& sats                       // out SInt32 sats
+            ) {
+
+        float d;
+        success = getInfo(d, sats);
+        std::memcpy(&dop, &d, sizeof(float));
+
+    }
+
+    void GetSpeed(
+            uint8_t& success,                   // out UInt8 success
+            int32_t& speed                      // out SInt32 speed
+            ) {
+
+        float s;
+        success = getSpeed(s);
+        std::memcpy(&speed, &s, sizeof(float));
+
+    }
+};
 /**
  * \~English \brief AutopilotConnector component main program entry point.
  * \details First, waits for the Logger component to initialize. After that,
@@ -65,31 +109,12 @@ int main(void) {
 
     logEntry("Initialization is finished", ENTITY_NAME, LogLevel::LOG_INFO);
 
-    NkKosTransport transport;
-    initReceiverInterface("navigation_system_connection", transport);
-
-    NavigationSystem_entity entity;
-    NavigationSystem_entity_init(&entity, CreateInitializationImpl(), CreateNavigationSystemInterfaceImpl());
-
-    NavigationSystem_entity_req req;
-    NavigationSystem_entity_res res;
-    char reqBuffer[NavigationSystem_entity_req_arena_size];
-    char resBuffer[NavigationSystem_entity_res_arena_size];
-    struct nk_arena reqArena = NK_ARENA_INITIALIZER(reqBuffer, reqBuffer + sizeof(reqBuffer));
-    struct nk_arena resArena = NK_ARENA_INITIALIZER(resBuffer, resBuffer + sizeof(resBuffer));
-
-    while (true) {
-        nk_req_reset(&req);
-        nk_arena_reset(&reqArena);
-        nk_arena_reset(&resArena);
-        if (nk_transport_recv(&transport.base, &req.base_, &reqArena) == NK_EOK) {
-            NavigationSystem_entity_dispatch(&entity, &req.base_, &reqArena, &res.base_, &resArena);
-            if (nk_transport_reply(&transport.base, &res.base_, &resArena) != NK_EOK)
-                logEntry("Failed to send a reply to IPC-message", ENTITY_NAME, LogLevel::LOG_WARNING);
-        }
-        else
-            logEntry("Failed to receive IPC-message", ENTITY_NAME, LogLevel::LOG_WARNING);
-    };
+    kosipc::Application app     =  kosipc::MakeApplicationAutodetect();
+    kosipc::components::Root       root;
+    INavigationSystem              interface;
+    root.interface              = &interface;
+    kosipc::EventLoop loop      =  app.MakeEventLoop(ServeStaticChannel("navigation_system_connection", root));
+    loop.Run();
 
     return EXIT_SUCCESS;
 }

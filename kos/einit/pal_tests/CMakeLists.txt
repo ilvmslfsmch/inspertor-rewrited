@@ -16,9 +16,7 @@ set (ENTITIES
         precompiled_vfs::VfsSdCardFs
         precompiled_vfs::VfsNet
         rump::dhcpcd_entity
-        ${wpa_SUPPLICANT_ENTITY}
-        KlogStorageEntity
-)
+        ${wpa_SUPPLICANT_ENTITY})
 
 
 # Generate PAL tests.
@@ -30,18 +28,19 @@ PROPERTIES
         - -f
         - fstab"
 )
+
 add_kss_pal_qemu_tests (
     PSL_FILES "../drone_controller/src/pal_tests.psl.in"
     DEPENDS
-        logger_edl_files
-        autopilot_connector_edl_files
-        credential_manager_edl_files
-        navigation_system_edl_files
-        periphery_controller_edl_files
-        server_connector_edl_files
-        flight_controller_edl_files
-        klog_storage_edl_files
+        LOGGER_EDL
+        AUTOPILOT_CONNECTOR_EDL
+        CREDENTIAL_MANAGER_EDL
+        NAVIGATION_SYSTEM_EDL
+        PERIPHERY_CONTROLLER_EDL
+        SERVER_CONNECTOR_EDL
+        FLIGHT_CONTROLLER_EDL
         klog_edl_files
+        klog_storage_edl_files
     ENTITIES ${ENTITIES}
     CUSTOM_VFS
         precompiled_vfs::VfsSdCardFs

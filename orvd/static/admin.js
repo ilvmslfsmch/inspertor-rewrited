@@ -293,6 +293,25 @@ map.on('pointermove', function (evt) {
 
 map.on('click', function (evt) {
   displayFeatureInfo(evt.pixel, evt.originalEvent.target);
+  
+  const feature = map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+    return feature;
+  });
+
+  if (feature) {
+    const featureId = feature.getId();
+    if (featureId && featureId.startsWith('uav')) {
+      const uavId = featureId.replace('uav', '');
+      let id_select = document.getElementById("id_select");
+      for (let i = 0; i < id_select.options.length; i++) {
+        if (id_select.options[i].text === uavId) {
+          id_select.selectedIndex = i;
+          change_active_id(uavId);
+          break;
+        }
+      }
+    }
+  }
 });
 
 map.getTargetElement().addEventListener('pointerleave', function () {
@@ -704,17 +723,30 @@ async function getAllData() {
                     document.getElementById('mission_checkbox').checked = false;
                 }
 
-                document.getElementById("delay").innerHTML = "Delay: " + uavData.delay;
+                document.getElementById("delay").innerHTML = "Задержка связи (сек): " + uavData.delay;
             }
 
             if (uavData.telemetry) {
                 const { lat, lon, alt, azimuth, dop, sats, speed } = uavData.telemetry;
-                document.getElementById("dop").innerHTML = "DOP: " + dop;
-                document.getElementById("sats").innerHTML = "SATS: " + sats;
                 add_or_update_vehicle_marker(id, lat, lon, alt, azimuth, speed);
                 if (id === active_id) {
+                    document.getElementById("lat").innerHTML = "Lat: " + lat.toFixed(6);
+                    document.getElementById("lon").innerHTML = "Lon: " + lon.toFixed(6);
+                    document.getElementById("alt").innerHTML = "Alt: " + alt.toFixed(1) + "m";
+                    document.getElementById("speed").innerHTML = "Spd: " + speed.toFixed(1) + "m/s";
+                    document.getElementById("azimuth").innerHTML = "Azim: " + azimuth.toFixed(2) + "°";
+                    document.getElementById("dop").innerHTML = "HDOP: " + dop;
+                    document.getElementById("sats").innerHTML = "SATS: " + sats;
                     map.getView().setCenter([lon, lat]);
                 }
+            } else if (id === active_id) {
+                document.getElementById("lat").innerHTML = "Lat: -";
+                document.getElementById("lon").innerHTML = "Lon: -";
+                document.getElementById("alt").innerHTML = "Alt: -";
+                document.getElementById("speed").innerHTML = "Spd: -";
+                document.getElementById("azimuth").innerHTML = "Azim: -";
+                document.getElementById("dop").innerHTML = "HDOP: -";
+                document.getElementById("sats").innerHTML = "SATS: -";
             }
         }
 

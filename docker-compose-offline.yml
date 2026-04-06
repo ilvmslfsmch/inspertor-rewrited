@@ -26,6 +26,9 @@ services:
     working_dir: /home/user/ardupilot
     user: user
     restart: always
+    ports:
+      - "5771:5771"
+      - "5772:5772"
     networks:
       cyberimmune:
         ipv4_address: 172.28.0.2
@@ -55,6 +58,9 @@ services:
     working_dir: /home/user/ardupilot
     user: user
     restart: always
+    ports:
+      - "5761:5761"
+      - "5762:5762"
     networks:
       cyberimmune:
         ipv4_address: 172.28.0.12

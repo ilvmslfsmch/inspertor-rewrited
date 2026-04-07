@@ -828,16 +828,16 @@ int getRecognitionResponse(char* tag, int32_t& alt) {
     alt = 0;
 
     char response[1024] = {0};
-    if (!receiveSubscription("api/image/response/", response, 1024)) {
-        logEntry("No recognition result was received", ENTITY_NAME, LogLevel::LOG_INFO);
-        return 1;
-    }
+    receiveSubscription("api/image/response/", response, 1024);
+    if (!strcmp(response, ""))
+        return 0;
 
-    char* tagStart = strstr(response, "result=") + strlen("result=");
+    char* tagStart = strstr(response, "result=");
     if (!tagStart) {
         logEntry("Failed to parse AI server response", ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
+    tagStart += strlen("result=");
     char* tagEnd = strstr(tagStart, "&");
     if (!tagEnd) {
         logEntry("Failed to parse AI server response", ENTITY_NAME, LogLevel::LOG_WARNING);
@@ -851,11 +851,12 @@ int getRecognitionResponse(char* tag, int32_t& alt) {
     tagEnd += 1;
 
     strcpy(tag, "NONE");
-    char* altStart = strstr(tagEnd, "rec_alt=") + strlen("rec_alt=");
+    char* altStart = strstr(tagEnd, "rec_alt=");
     if (!altStart) {
         logEntry("Failed to parse AI server response", ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
+    altStart += strlen("rec_alt=");
     char* altEnd = strstr(altStart, "&");
     if (altEnd)
         altEnd[0] = '\0';

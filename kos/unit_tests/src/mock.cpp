@@ -67,10 +67,6 @@ int getBoardId(char* id) {
     return 1;
 }
 
-int waitForInit(const char* connection, const char* receiverEntity) {
-    return 1;
-}
-
 int readRfid(char* tag) {
     return 1;
 }

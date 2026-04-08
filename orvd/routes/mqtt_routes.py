@@ -9,7 +9,7 @@ from handlers.api_handlers import (
     telemetry_handler, arm_handler, save_logs_handler, revise_mission_handler,
     save_events_handler
 )
-from handlers.mqtt_handlers import rfid_handler
+from handlers.mqtt_handlers import tag_handler
 
 def extract_id_from_kwargs(kwargs):
     id = kwargs.get('id')
@@ -102,53 +102,52 @@ def revise_mission(client, userdata, msg, **kwargs):
     except Exception as e:
         print(f"Error handling mission message: {e}")
         
-@mqtt.topic(MQTTTopic.RFID)
-def rfid(client, userdata, msg, **kwargs):
+@mqtt.topic(MQTTTopic.TAG_REQUEST)
+def tag_request(client, userdata, msg, **kwargs):
     try:
         query_string = msg.payload.decode()
         query_params = parse_qs(query_string)
         payload = {k: v[0] for k, v in query_params.items()}
-        payload['id'] = extract_id_from_kwargs(kwargs)
-        rfid_handler(**payload)
+        id = extract_id_from_kwargs(kwargs)
+        
+        response = signed_request(handler_func=tag_handler, verifier_func=verify, signer_func=sign,
+                                    query_str=f"{APIRoute.TAG}?id={id}&tag={payload.get('tag')}",
+                                    key_group=f'{KeyGroup.KOS}{id}', sig=payload['sig'], id=id, tag=payload.get('tag'))
+        if not context.flight_info_response:
+            return
+        if len(response) == 2 and response[1] == 200:
+            mqtt.publish_message(MQTTTopic.TAG_RESPONSE.format(id=id), response[0])
     except Exception as e:
-        print(f"Error handling rfid message: {e}")
+        print(f"Error handling tag message: {e}")
 
-@mqtt.topic(MQTTTopic.DM_SEND)
+@mqtt.topic(MQTTTopic.DM)
 def direct_message(client, userdata, msg, **kwargs):
     """
-    Перенаправляет личные сообщения с одного дрона на другой, подписывая ключом ОРВД.
+    Обрабатывает личные сообщения между дронами. Просто выводит сообщение.
     """
     try:
-        send_id = kwargs.get('send_id')
-        recv_id = kwargs.get('recv_id')
+        receiver_id = kwargs.get('receiver_id')
+        sender_id = kwargs.get('sender_id')
 
-        if not send_id or not recv_id:
+        if not sender_id or not receiver_id:
             print("Sender or receiver ID not found in topic for direct message.")
             return
 
-        query_string = msg.payload.decode()
-        query_params = parse_qs(query_string)
-        payload = {k: v[0] for k, v in query_params.items()}
+        message_with_sig = msg.payload.decode()
+        parts = message_with_sig.split('#')
         
-        message = payload.get('message')
-        sig = payload.get('sig')
+        if len(parts) != 2:
+            print(f"Invalid DM payload format: {message_with_sig}")
+            return
+        
+        message = parts[0]
+        sig = parts[1]
 
         if not message or not sig:
-            print(f"Invalid payload for DM: {query_string}")
+            print(f"Invalid payload for DM: {message_with_sig}")
             return
-            
-        sender_key_group = f"{KeyGroup.KOS}{send_id}"
-        data_to_verify = f"message={message}"
-        
-        if not verify(data_to_verify, int(sig, 16), sender_key_group):
-            print(f"DM signature verification failed for sender {send_id}")
-            return
-            
-        orvd_signature = hex(sign(data_to_verify, KeyGroup.ORVD))[2:]
-        new_payload = f"{data_to_verify}#{orvd_signature}"
-        
-        topic = MQTTTopic.DM_RECV.format(recv_id=recv_id, send_id=send_id)
-        mqtt.publish_message(topic, new_payload)
+
+        print(f"DM from {sender_id} to {receiver_id}: {message}")
 
     except Exception as e:
         print(f"Error handling direct message: {e}")

@@ -114,23 +114,23 @@ footer {
   background-color: #04AA6D;
   border: none;
   color: white;
-  padding: 7px 32px;
+  padding: 10px 20px;
   text-align: center;
-  transition-duration: 0.4s;
+  transition: all 0.3s ease;
   text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: bold;
   display: block;
-  border: 1px solid green;
-  border-radius: 6px;
-  margin-top: 3px; 
-  width: 250px;
+  border: 1px solid #038a53;
+  border-radius: 4px;
+  margin: 8px auto;
+  width: 100%;
+  cursor: pointer;
 }
 
-.button:hover {
-  background-color: white;
-  color: black;
-  border: 2px solid #04AA6D;
+.button:hover:not(:disabled) {
+  background-color: #038a53;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .button:disabled {
@@ -145,16 +145,16 @@ footer {
   bottom: 0px;
   left: 0px;
   width: 20%;
-  min-width: 300px;
+  min-width: 280px;
+  background: #ffffff;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  overflow-y: auto;
+  z-index: 10;
+  padding: 15px;
 }
 
 .horizontal-center {
-  margin: 0;
-  position: absolute;
-  left: 50%;
-  -ms-transform: translate(-50%, 0%);
-  transform: translate(-50%, 0%);
-  direction: ltr;
+  width: 100%;
 }
 
 .disabled {
@@ -210,17 +210,22 @@ footer {
 }
 
 label {
-  color:black;
-  margin-bottom: 0.5rem;
-  display: block;
+  color: #444;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  cursor: pointer;
 }
 
-label {
-  color:black;
+input[type="checkbox"] {
+  margin-right: 10px;
 }
 
 .note {
-  color: black;
+  color: #333;
+  font-size: 14px;
+  margin: 4px 0;
 }
 
 .id {
@@ -421,7 +426,44 @@ box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
 #main-buttons p {
-  margin: 5px;
+  margin: 2px 0;
+}
+
+.info-card {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 12px;
+}
+
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 10px;
+}
+
+.telemetry-grid p {
+  font-size: 12px !important;
+  font-family: monospace;
+}
+
+#status {
+  font-weight: bold;
+  color: #04AA6D;
+}
+
+.id-container {
+  background: #f1f3f5;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+#id_select {
+  padding: 5px;
+  border-radius: 4px;
+  border: 1px solid #ced4da;
 }
 
 #mission-sender-form {

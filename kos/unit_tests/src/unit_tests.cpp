@@ -145,12 +145,12 @@ TEST(CredentialManager, RSA) {
 
     char key[1024] = {0};
     snprintf(key, 1024, "$Key: %s %s", getKeyN(), getKeyE());
-    EXPECT_TRUE(setRsaKey(key));
+    EXPECT_TRUE(setRsaKey(key, MessageSource::SERVER_ORVD));
 
     char signedMessage[512] = {0};
     snprintf(signedMessage, 512, "%s#%s", message, sign);
     uint8_t correct = 0;
-    EXPECT_TRUE(checkMessageSignature(signedMessage, correct));
+    EXPECT_TRUE(checkMessageSignature(signedMessage, MessageSource::SERVER_ORVD, correct));
     EXPECT_TRUE(correct);
 }
 
@@ -471,51 +471,6 @@ TEST(FlighController, ParseNoFlightAreasHash) {
     EXPECT_STRNE(getMockLog(), "Empty log");
 }
 
-//Logger
-TEST(Logger, AddLogEntry) {
-    EXPECT_TRUE(createLog());
-
-    FILE* redir = freopen("console.txt", "w", stdout);
-    addLogEntry("Unit test entry", LogLevel::LOG_INFO);
-    fclose(redir);
-
-    int file = open("/logs/flight_controller.log", O_RDONLY);
-    EXPECT_NE(file, -1);
-    int i = 0;
-    char fileStr[257] = {0};
-    while (i < 256) {
-        char letter;
-        EXPECT_EQ(read(file, &letter, 1), 1);
-        if ((letter == '\n') || (letter == '\0'))
-            break;
-        fileStr[i] = letter;
-        i++;
-    }
-    close(file);
-    char* fileStart = strstr(fileStr, "[info]");
-    EXPECT_TRUE(fileStart);
-    EXPECT_STREQ(fileStart, "[info]Unit test entry");
-
-    int console = open("console.txt", O_RDONLY);
-    EXPECT_NE(console, -1);
-    i = 0;
-    char consoleStr[257] = {0};
-    while (i < 256) {
-        char letter;
-        EXPECT_EQ(read(console, &letter, 1), 1);
-        if ((letter == '\n') || (letter == '\0'))
-            break;
-        consoleStr[i] = letter;
-        i++;
-    }
-    close(console);
-    char* consoleStart = strstr(consoleStr, "[info]");
-    EXPECT_TRUE(consoleStart);
-    EXPECT_STREQ(consoleStart, "[info]Unit test entry");
-
-    EXPECT_STREQ(fileStr, consoleStr);
-}
-
 //Navigation System
 TEST(NavigationSystem, NoPosition) {
     EXPECT_FALSE(hasPosition());
@@ -569,18 +524,6 @@ TEST(PeripheryController, Buzz) {
     setMockBuzzer(true);
     EXPECT_TRUE(getMockBuzzer());
     buzz();
-    EXPECT_FALSE(getMockBuzzer());
-}
-
-TEST(PeripheryController, EnableBuzzer) {
-    setMockBuzzer(false);
-    EXPECT_FALSE(getMockBuzzer());
-
-    EXPECT_TRUE(startBuzzer());
-    EXPECT_FALSE(startBuzzer());
-
-    EXPECT_TRUE(getMockBuzzer());
-    sleep(3);
     EXPECT_FALSE(getMockBuzzer());
 }
 

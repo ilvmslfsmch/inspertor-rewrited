@@ -1,0 +1,4 @@
+aiomqtt
+openai
+pydantic-settings
+python-dotenv

@@ -14,7 +14,6 @@
  */
 
 #include "../include/credential_manager.h"
-#include "../../shared/include/ipc_messages_initialization.h"
 #include "../../shared/include/ipc_messages_server_connector.h"
 
 #include <mbedtls/ctr_drbg.h>
@@ -71,11 +70,6 @@ void bytesToString(uint8_t* source, uint32_t sourceSize, char* destination, uint
 }
 
 int generateRsaKey() {
-    while (!waitForInit("server_connector_connection", "ServerConnector")) {
-        logEntry("Failed to receive initialization notification from ServerConnector. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
-        sleep(1);
-    }
-
     mbedtls_entropy_context entropy;
     mbedtls_ctr_drbg_context drbg;
     mbedtls_mpi N, E, D;
@@ -156,7 +150,18 @@ int shareRsaKey() {
         logEntry("Failed to share RSA key. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);
     }
-    return setRsaKey(response);
+    return setRsaKey(response, MessageSource::SERVER_ORVD);
+}
+
+int getPartnerRsaKey() {
+    char request[1024] = {0};
+    char response[1024] = {0};
+    snprintf(request, 1024, "/api/kos_key?target_id=%s", PARTNER_ID);
+    while (!sendRequest(request, response, 1024) || !strcmp(response, "TIMEOUT") || !strcmp(response, "$Key: NOT_FOUND")) {
+        logEntry("Failed to get partner drone RSA key. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
+        sleep(1);
+    }
+    return setRsaKey(response, MessageSource::PARTNER_DRONE);
 }
 
 int getMessageSignature(char* message, char* sign) {

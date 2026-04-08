@@ -18,6 +18,7 @@
 #pragma once
 
 #include "../../shared/include/ipc_messages_logger.h"
+#include "../../shared/include/ipc_messages_credential_manager.h"
 #include <stdint.h>
 
 /**
@@ -61,6 +62,7 @@ int loadRsaKey(uint8_t* N, uint8_t* D, char* n, char* e, uint32_t nLen, uint32_t
  * \note Обмен ключами происходит при помощи запроса на сервер ОРВД через компонент ServerConnector.
  */
 int shareRsaKey();
+int getPartnerRsaKey();
 
 /**
  * \~English Attempts to read stored RSA key. If file "rsa" with key is found, sets the key parts
@@ -81,7 +83,7 @@ int getRsaKey();
  * \param[in] key Строка с открытой частью ключа. Требуемый формат строки: "$Key: n-часть_ключа e-часть_ключа".
  * \return Возвращает 1, если ключ был успешно установлен, иначе -- 0.
  */
-int setRsaKey(char* key);
+int setRsaKey(char* key, MessageSource source);
 
 /**
  * \~English Computes an RSA signature of a given message.
@@ -104,7 +106,7 @@ int getMessageSignature(char* message, char* sign);
  * \param[out] authenticity Результат проверки аутентичности сообщения.
  * \return Возвращает 1, если аутентичность была проверена (но не обязательно подтверждена), иначе -- 0.
  */
-int checkMessageSignature(char* message, uint8_t &correct);
+int checkMessageSignature(char* message, MessageSource source, uint8_t &correct);
 
 /**
  * \~English Returns n-part of security module RSA key.

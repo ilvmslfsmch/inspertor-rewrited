@@ -28,52 +28,61 @@
 
 #pragma once
 
-#define NK_USE_UNQUALIFIED_NAMES
-#include <drone_controller/ServerConnectorInterface.idl.h>
+#include "../include/server_connector.h"
 
+#define NK_USE_UNQUALIFIED_NAMES
+#include <drone_controller/ServerConnector.edl.cpp.h>
+
+using namespace kosipc::stdcpp::drone_controller;
+
+class IServerConnector : public ServerConnectorInterface {
+public:
 /**
  * \~English IPC message handler. See \ref getBoardId.
  * \~Russian Обработчик IPC-сообщения. См. \ref getBoardId.
  */
-nk_err_t GetBoardIdImpl(struct ServerConnectorInterface *self,
-                    const ServerConnectorInterface_GetBoardId_req *req, const struct nk_arena *reqArena,
-                    ServerConnectorInterface_GetBoardId_res *res, struct nk_arena *resArena);
-/**
- * \~English IPC message handler. See \ref sendRequest.
- * \~Russian Обработчик IPC-сообщения. См. \ref sendRequest.
- */
-nk_err_t SendRequestImpl(struct ServerConnectorInterface *self,
-                    const ServerConnectorInterface_SendRequest_req *req, const struct nk_arena *reqArena,
-                    ServerConnectorInterface_SendRequest_res *res, struct nk_arena *resArena);
-/**
- * \~English IPC message handler. See \ref sendRequest.
- * \~Russian Обработчик IPC-сообщения. См. \ref sendRequest.
- */
-nk_err_t PublishMessageImpl(struct ServerConnectorInterface *self,
-                    const ServerConnectorInterface_PublishMessage_req *req, const struct nk_arena *reqArena,
-                    ServerConnectorInterface_PublishMessage_res *res, struct nk_arena *resArena);
+    void GetBoardId(uint8_t& success, std::string& id) {
+        //TODO: rewrite to cpp way
+        id = std::string(getBoardName());
+        success = (id.size() > 0);
+    }
 
 /**
  * \~English IPC message handler. See \ref sendRequest.
  * \~Russian Обработчик IPC-сообщения. См. \ref sendRequest.
  */
-nk_err_t ReceiveSubscriptionImpl(struct ServerConnectorInterface *self,
-                    const ServerConnectorInterface_ReceiveSubscription_req *req, const struct nk_arena *reqArena,
-                    ServerConnectorInterface_ReceiveSubscription_res *res, struct nk_arena *resArena);
+    void SendRequest(const std::string& query, uint8_t& success, std::string& response) {
+        //TODO: rewrite to cpp way
+        char q[MaxQueryLength + 1] = {0};
+        query.copy(q, query.size() + 1);
+        char r[MaxResponseLength + 1] = {0};
+        success = requestServer(q, r, MaxResponseLength + 1);
+        response = std::string(r);
+    }
 
 /**
- * \~English Creates an ServerConnectorInterface C++ interface and maps its methods to IPC message handlers.
- * \~Russian Создает C++ интерфейс ServerConnectorInterface и сопоставляет его методы с обработчиками IPC-сообщений.
+ * \~English IPC message handler. See \ref sendRequest.
+ * \~Russian Обработчик IPC-сообщения. См. \ref sendRequest.
  */
-static struct ServerConnectorInterface *CreateServerConnectorInterfaceImpl(void) {
-    static const struct ServerConnectorInterface_ops Ops = {
-        .GetBoardId = GetBoardIdImpl, .SendRequest = SendRequestImpl,
-        .PublishMessage = PublishMessageImpl, .ReceiveSubscription = ReceiveSubscriptionImpl
-    };
+    void PublishMessage(const std::string& topic, const std::string& publication, uint8_t& success) {
+        //TODO: rewrite to cpp way
+        char t[MaxTopicLength + 1] = {0};
+        topic.copy(t, topic.size() + 1);
+        char p[MaxPublicationLength + 1] = {0};
+        publication.copy(p, publication.size() + 1);
+        success = publish(t, p);
+    }
 
-    static ServerConnectorInterface obj = {
-        .ops = &Ops
-    };
-
-    return &obj;
-}
+/**
+ * \~English IPC message handler. See \ref sendRequest.
+ * \~Russian Обработчик IPC-сообщения. См. \ref sendRequest.
+ */
+    void ReceiveSubscription(const std::string& topic, std::string& subscription, uint8_t& success) {
+        //TODO: rewrite to cpp way
+        char t[MaxTopicLength + 1] = {0};
+        topic.copy(t, topic.size() + 1);
+        char s[MaxSubscriptionLength + 1] = {0};
+        success = getSubscription(t, s, MaxSubscriptionLength + 1);
+        subscription = std::string(s);
+    }
+};

@@ -35,11 +35,24 @@
           Посылать информацию о полете
         </label>
         <div id="main-buttons">
-          <p id="status" class="status note">Статус: - </p>
-          <p id="waiters" class="wait note">Ожидают: - </p>
-          <p id="dop" class="dop note">HDOP: - </p>
-          <p id="sats" class="sats note">SATS: - </p>
-          <p id="delay" class="delay note">Задержка связи (сек): - </p>
+          <div class="info-card">
+            <p id="status" class="status note">Статус: - </p>
+            <p id="waiters" class="wait note">Ожидают: - </p>
+          </div>
+
+          <div class="info-card telemetry-grid">
+            <p id="lat" class="note">Lat: -</p>
+            <p id="lon" class="note">Lon: -</p>
+            <p id="alt" class="note">Alt: -</p>
+            <p id="speed" class="note">Spd: -</p>
+            <p id="azimuth" class="note">Azim: -</p>
+            <p id="dop" class="dop note">HDOP: -</p>
+            <p id="sats" class="sats note">SATS: -</p>
+          </div>
+
+          <div class="info-card">
+             <p id="delay" class="delay note">Задержка связи (сек): - </p>
+          </div>
 
           <button id="arm" class="arm button" type="button">Arm</button>
           <button id="disarm" class="disarm button" type="button">Disarm</button>

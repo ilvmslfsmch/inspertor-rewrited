@@ -15,9 +15,6 @@ SDK_FOLDER_NAME=KasperskyOS-Community-Edition-Qemu-1.4.0.102
 SDK_PKG_NAME=KasperskyOS-Community-Edition-Qemu-1.4.0.102_ru.deb
 ## -----------------------------------------------------------------------------
 
-# SDK_FOLDER_NAME=KasperskyOS-Community-Edition-RaspberryPi4b-wifi
-# SDK_PKG_NAME=KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0_amd64.deb
-
 help: ## Покажет эту помощь
 	@sed -ne '/@sed/!s/^## //p' $(MAKEFILE_LIST)
 	@sed -ne '/@sed/!s/:.*## /\t/p' $(MAKEFILE_LIST) |column -tl 2
@@ -27,7 +24,7 @@ docs:
 
 docker: docker-image	## Сборка образов docker (короткая команда)
 
-docker-image: docker-image-simulator docker-image-orvd docker-image-mqtt-server docker-image-ntp-server ## Сборка образов docker
+docker-image: docker-image-simulator docker-image-orvd docker-image-mqtt-server docker-image-ntp-server docker-image-recognizer ## Сборка образов docker
 
 docker-image-simulator: ## Сборка образа docker с модулем безопасности
 	docker build ./ -t simulator --build-arg SDK_FOLDER_NAME=$(SDK_FOLDER_NAME) --build-arg SDK_PKG_NAME=$(SDK_PKG_NAME)
@@ -49,6 +46,9 @@ docker-image-mqtt-server: ## Сборка образа docker с MQTT серве
 
 docker-image-ntp-server: ## Сборка образа docker с NTP сервером
 	docker build -f ntp-server.Dockerfile -t ntp-server ./
+
+docker-image-recognizer: ## Сборка образа docker с recognizer
+	docker build -t recognizer ./recognizer
 
 clean-docker-compose: ## Подчистка docker-compose после запуска проекта или тестов
 	docker compose -f docker-compose-offline.yml down

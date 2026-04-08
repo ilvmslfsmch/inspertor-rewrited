@@ -10,22 +10,21 @@ else()
     set (PERIPHERY_CONTROLLER_SRC "src/periphery_controller_real.cpp")
 endif()
 
-add_executable (PeripheryController "src/main.cpp" "src/periphery_controller.cpp" ${PERIPHERY_CONTROLLER_SRC}
-    "src/periphery_controller_interface.cpp" "../shared/src/initialization_interface.cpp"
-    "../shared/src/ipc_messages_initialization.cpp" "../shared/src/ipc_messages_logger.cpp"
+add_executable (PeripheryController "src/main.cpp" "src/periphery_controller.cpp"
+    ${PERIPHERY_CONTROLLER_SRC} "../shared/src/ipc_messages_logger.cpp"
     "../shared/src/ipc_messages_server_connector.cpp")
-add_dependencies (PeripheryController periphery_controller_edl_files)
+add_dependencies (PeripheryController PERIPHERY_CONTROLLER_EDL)
 
 target_compile_definitions (PeripheryController PRIVATE ENTITY_NAME="Periphery Controller")
 
 if (SIMULATION)
     target_sources (PeripheryController PUBLIC "../shared/src/ipc_messages_navigation_system.cpp")
     target_compile_definitions (PeripheryController PRIVATE SIMULATOR_IP="${SIMULATOR_IP}")
-    target_link_libraries (PeripheryController ${vfs_CLIENT_LIB})
+    bind_nk_targets (PeripheryController vfs::client PERIPHERY_CONTROLLER_EDL)
 else ()
-    target_link_libraries (PeripheryController ${bsp_CLIENT_LIB} ${gpio_CLIENT_LIB} ${uart_CLIENT_LIB})
+    bind_nk_targets (PeripheryController bsp::client gpio::client uart::client PERIPHERY_CONTROLLER_EDL)
 endif()
-target_link_libraries (PeripheryController ${CMAKE_THREAD_LIBS_INIT})
+bind_nk_targets (PeripheryController ${CMAKE_THREAD_LIBS_INIT} PERIPHERY_CONTROLLER_EDL)
 
 if (INSPECTOR_ROLE)
     target_compile_definitions (PeripheryController PRIVATE IS_INSPECTOR=TRUE)

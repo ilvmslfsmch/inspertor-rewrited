@@ -41,6 +41,23 @@ def key_kos_exchange_handler(id: str, n: str, e: str):
     str_to_send = f'$Key: {hex(orvd_n)[2:]} {hex(orvd_e)[2:]}'
     return str_to_send
 
+def kos_key_handler(target_id: str):
+    """
+    Возвращает открытый ключ KOS для заданного id.
+
+    Args:
+        target_id (str): Идентификатор БПЛА.
+
+    Returns:
+        str: Строка с открытым ключом KOS или $Key: NOT_FOUND.
+    """
+    key_entity = get_entity_by_key(UavPublicKeys, target_id)
+    if key_entity is None:
+        return '$Key: NOT_FOUND'
+    
+    n_hex = hex(int(key_entity.n))[2:]
+    e_hex = hex(int(key_entity.e))[2:]
+    return f'$Key: {n_hex} {e_hex}'
 
 def auth_handler(id: str):
     """
@@ -84,8 +101,7 @@ def auth_handler(id: str):
     mqtt_publish_forbidden_zones()
     mqtt_publish_auth(id)
     
-    if context.rfid_sets:
-        context.uav_rfid_map[id] = random.choice(context.rfid_sets)
+    context.uav_tag_map[id] = random.choice(['A1', 'A2', 'A3'])
 
     return f'$Auth id={id}'
 

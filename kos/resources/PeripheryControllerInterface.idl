@@ -1,10 +1,10 @@
 package drone_controller.PeripheryControllerInterface
 
-const UInt16 MaxTagLength = 36;
+const UInt16 MaxPictureSize = 1024;
 
 interface {
     EnableBuzzer(out UInt8 success);
     SetKillSwitch(in UInt8 enable, out UInt8 success);
     SetCargoLock(in UInt8 enable, out UInt8 success);
-    ScanRfid(out string<MaxTagLength> tag, out UInt8 success);
+    TakePicture(out string<MaxPictureSize> picture, out UInt8 success);
 }

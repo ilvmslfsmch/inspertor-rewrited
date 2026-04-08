@@ -27,7 +27,7 @@ uint16_t autopilotPort = 5765;
 /** \endcond */
 
 int initAutopilotConnector() {
-    if (!wait_for_network()) {
+    if (!wait_for_iface(DEFAULT_INTERFACE, IWF_EXISTS, DEFAULT_TIMEOUT) || !configure_net_iface(DEFAULT_INTERFACE, DEFAULT_ADDR, DEFAULT_MASK, DEFAULT_GATEWAY, DEFAULT_MTU)) {
         logEntry("Connection to network has failed", ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }

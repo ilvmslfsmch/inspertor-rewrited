@@ -12,6 +12,7 @@ from utils import (
 from handlers.api_handlers import (
     key_kos_exchange_handler, auth_handler, get_all_forbidden_zones_handler,
     get_forbidden_zones_delta_handler, get_forbidden_zones_hash_handler,
+    kos_key_handler,
 )
 from handlers.admin_handlers import (
     admin_auth_handler, arm_decision_handler, force_disarm_handler,
@@ -28,7 +29,8 @@ from handlers.admin_handlers import (
     get_auto_mission_approval_handler, toggle_auto_mission_approval_handler,
     toggle_auto_revoke_permission_handler, set_revoke_coords_handler,
     toggle_auto_break_connection_handler, set_break_coords_handler,
-    toggle_change_forbidden_zones_handler, set_change_forbidden_zones_coords_handler
+    toggle_change_forbidden_zones_handler, set_change_forbidden_zones_coords_handler,
+    get_uav_tag_handler
 )
 from handlers.general_handlers import (
     key_ms_exchange_handler, fmission_ms_handler, get_logs_handler,
@@ -1500,8 +1502,32 @@ def forbidden_zones_hash():
                               query_str=f'{APIRoute.FORBIDDEN_ZONES_HASH}?id={id}', key_group=f'{KeyGroup.KOS}{id}', sig=sig, id=id)
     else:
         return bad_request('Wrong id')
-      
-      
+
+
+@bp.route(APIRoute.KOS_KEY)
+def kos_key():
+    """
+    Возвращает открытый ключ KOS для заданного id.
+    ---
+    tags:
+      - api
+    parameters:
+      - name: target_id
+        in: query
+        type: string
+        required: true
+        description: Идентификатор БПЛА.
+    responses:
+      200:
+        description: Строка с открытым ключом KOS (hex, без 0x) или $Key: NOT_FOUND.
+        schema:
+          type: string
+          example: "$Key: {n} {e}"
+    """
+    target_id = request.args.get('target_id')
+    return regular_request(handler_func=kos_key_handler, target_id=target_id)
+
+
 @bp.route(AdminRoute.EXPORT_FORBIDDEN_ZONES)
 def export_forbidden_zones():
     """
@@ -1872,3 +1898,40 @@ def set_change_forbidden_zones_coords():
         lat_B=lat_B, lon_B=lon_B,
         lat_C=lat_C, lon_C=lon_C
     )
+
+@bp.route(AdminRoute.GET_UAV_TAG)
+def get_uav_tag():
+    """
+    Возвращает назначенный A тег для заданного id.
+    ---
+    tags:
+      - admin
+    parameters:
+      - name: id
+        in: query
+        type: string
+        required: true
+        description: Идентификатор БПЛА.
+      - name: token
+        in: query
+        type: string
+        required: true
+        description: Токен аутентификации.
+    responses:
+      200:
+        description: Назначенный тег.
+        schema:
+          type: string
+          example: "A1"
+      400:
+        description: Неверный идентификатор.
+        schema:
+          type: string
+          example: "Wrong id"
+    """
+    id = cast_wrapper(request.args.get('id'), str)
+    token = request.args.get('token')
+    if id:
+        return authorized_request(handler_func=get_uav_tag_handler, token=token, id=id)
+    else:
+        return bad_request('Wrong id')

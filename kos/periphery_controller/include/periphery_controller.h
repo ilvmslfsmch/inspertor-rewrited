@@ -50,14 +50,14 @@ bool isKillSwitchEnabled();
 int setBuzzer(bool enable);
 
 /**
- * \~English Scans an RFID tag.
- * \param[out] tag Id of scanned tag. Empty line if tag was not read.
- * \return Returns 1 if scan attempt was performed.
- * \~Russian Сканирует RFID-метку.
- * \param[out] tag Идентификатор прочитанной метки. Пустая строка, если метка не была прочитана.
- * \return Возвращает 1, если попытка сканирования была произведена.
+ * \~English Takes a picture with the camera.
+ * \param[out] picture Taken picture in Base64 format.
+ * \return Returns 1 if picture was taken.
+ * \~Russian Выполняет съемку изображения камерой.
+ * \param[out] picture Снятое изображение в формате Base64.
+ * \return Возвращает 1, если фотография была снята.
  */
-int readRfid(char* tag);
+int takePicture(char* picture);
 
 /**
  * \~English Turns on the buzzer and then starts a separate process that will turn off

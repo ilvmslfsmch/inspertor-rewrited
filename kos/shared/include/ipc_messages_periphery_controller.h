@@ -34,13 +34,11 @@ int setKillSwitch(uint8_t enable);
  */
 int setCargoLock(uint8_t enable);
 /**
- * \~English Performs RFID tag scan for a short period of time.
- * \param[out] tag Scanned tag ID or empty string, if no tag was scanned.
- * \note The length of tag is 36 symbols with '\0'.
- * \return Returns 1 on successful attempt (no matter if tag was found or not), 0 otherwise.
- * \~Russian Производит поиск RFID-метки в течение короткого промежутка времени.
- * \param[out] tag ID считанного тега или пустая строка, если тег не был найден.
- * \note Длина тега равна 36 символам, включая '\0'
- * \return Возвращает 1, если сканирование было проведено (неважно, была ли найдена метка), иначе -- 0.
+ * \~English Takes a picture with the camera.
+ * \param[out] picture Taken picture in Base64 format.
+ * \return Returns 1 if picture was taken.
+ * \~Russian Выполняет съемку изображения камерой.
+ * \param[out] picture Снятое изображение в формате Base64.
+ * \return Возвращает 1, если фотография была снята.
  */
-int scanRfid(char* tag);
+int takePicture(char* picture);

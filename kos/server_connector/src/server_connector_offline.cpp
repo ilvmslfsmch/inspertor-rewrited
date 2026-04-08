@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 
-int flightStatusSend, missionSend, areasSend, armSend, newMissionSend, destinationRfid;
+int flightStatusSend, missionSend, areasSend, armSend, newMissionSend, scannedImage, sentTag;
 
 int initServerConnector() {
     if (strlen(BOARD_ID))
@@ -29,7 +29,8 @@ int initServerConnector() {
     areasSend = true;
     armSend= false;
     newMissionSend = false;
-    destinationRfid = 0;
+    scannedImage = 0;
+    sentTag = 0;
 
     return 1;
 }
@@ -58,11 +59,25 @@ int publish(char* topic, char* publication) {
         armSend = true;
     else if (strstr(topic, "api/nmission/request"))
         newMissionSend = true;
-    else if (strstr(topic, "api/rfid")) {
-        if (strstr(publication, "tag=rfid2"))
-            destinationRfid = 1;
+    else if (strstr(topic, "api/image/request")) {
+        if (strstr(publication, "image=picture1"))
+            scannedImage = 1;
+        else if (strstr(publication, "image=picture2"))
+            scannedImage = 2;
+        else if (strstr(publication, "image=picture3"))
+            scannedImage = 3;
         else
-            destinationRfid = 2;
+            scannedImage = 4;
+    }
+    else if (strstr(topic, "api/tag/request")) {
+        if (strstr(publication, "tag=A1"))
+            sentTag = 1;
+        else if (strstr(publication, "tag=A2"))
+            sentTag = 2;
+        else if (strstr(publication, "tag=A3"))
+            sentTag = 3;
+        else
+            sentTag = 4;
     }
 
     return 1;
@@ -122,22 +137,39 @@ int getSubscription(char* topic, char* message, uint32_t messageSize) {
         }
         strncpy(message, "$Approve 0#", 13);
     }
-    else if (strstr(topic, "api/rfid/response/") && destinationRfid) {
-        if (destinationRfid == 1) {
-            if (messageSize < 7) {
-                logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
-                return 0;
-            }
-            strncpy(message, "$TRUE#", 7);
+    else if (strstr(topic, "api/image/response/") && scannedImage) {
+        if (messageSize < 25) {
+            scannedImage = 0;
+            logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
         }
-        else {
-            if (messageSize < 8) {
-                logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
-                return 0;
-            }
-            strncpy(message, "$FALSE#", 8);
+
+        if (scannedImage == 1)
+            strncpy(message, "result=A1&rec_alt=NONE", 23);
+        else if (scannedImage == 2)
+            strncpy(message, "result=A2&rec_alt=NONE", 23);
+        else if (scannedImage == 3)
+            strncpy(message, "result=A3&rec_alt=NONE", 23);
+        else
+            strncpy(message, "result=NONE&rec_alt=2", 25);
+        scannedImage = 0;
+    }
+    else if (strstr(topic, "api/tag/response/") && sentTag) {
+        if (messageSize < 15) {
+            sentTag = 0;
+            logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
         }
-        destinationRfid = 0;
+
+        if (sentTag == 1)
+            strncpy(message, "$FALSE A1#", 11);
+        else if (sentTag == 2)
+            strncpy(message, "$TRUE A2#", 10);
+        else if (sentTag == 3)
+            strncpy(message, "$FALSE A3#", 11);
+        else
+            strncpy(message, "$FALSE TAG#", 15);
+        sentTag = 0;
     }
     else
         strcpy(message, "");

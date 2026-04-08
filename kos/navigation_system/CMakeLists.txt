@@ -10,22 +10,21 @@ else ()
     set (NAVIGATION_SYSTEM_SRC "src/navigation_system_real.cpp")
 endif ()
 
-add_executable (NavigationSystem "src/main.cpp" "src/navigation_system.cpp" ${NAVIGATION_SYSTEM_SRC}
-    "src/navigation_system_interface.cpp" "../shared/src/initialization_interface.cpp"
-    "../shared/src/ipc_messages_server_connector.cpp" "../shared/src/ipc_messages_initialization.cpp"
-    "../shared/src/ipc_messages_logger.cpp")
-add_dependencies (NavigationSystem navigation_system_edl_files)
+add_executable (NavigationSystem "src/main.cpp" "src/navigation_system.cpp"
+    ${NAVIGATION_SYSTEM_SRC} "../shared/src/ipc_messages_logger.cpp"
+    "../shared/src/ipc_messages_server_connector.cpp")
+add_dependencies (NavigationSystem NAVIGATION_SYSTEM_EDL)
 
 target_compile_definitions (NavigationSystem PRIVATE ENTITY_NAME="Navigation System")
 
 if (SIMULATION)
     target_compile_definitions (NavigationSystem PRIVATE SIMULATOR_IP="${SIMULATOR_IP}")
-    target_link_libraries (NavigationSystem ${vfs_CLIENT_LIB})
+    bind_nk_targets (NavigationSystem vfs::client NAVIGATION_SYSTEM_EDL)
 else ()
     target_compile_definitions (NavigationSystem PRIVATE COORD_SRC=${COORD_SRC} ALT_SRC=${ALT_SRC})
-    target_link_libraries (NavigationSystem ${bsp_CLIENT_LIB} ${uart_CLIENT_LIB} ${i2c_CLIENT_LIB})
+    bind_nk_targets (NavigationSystem bsp::client uart::client i2c::client NAVIGATION_SYSTEM_EDL)
 endif ()
-target_link_libraries (NavigationSystem ${CMAKE_THREAD_LIBS_INIT})
+bind_nk_targets (NavigationSystem ${CMAKE_THREAD_LIBS_INIT} NAVIGATION_SYSTEM_EDL)
 
 if (INSPECTOR_ROLE)
     target_compile_definitions (NavigationSystem PRIVATE IS_INSPECTOR=TRUE)

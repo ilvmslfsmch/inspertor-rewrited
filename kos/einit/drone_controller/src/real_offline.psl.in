@@ -1,5 +1,7 @@
 /* Solution security policy */
 use drone_controller._
+use EDL logrr.LogrrServer
+use EDL logrr.LogrrFsOutputChannel
 
 @INIT_EXTERNAL_ENTITIES@
 

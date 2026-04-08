@@ -28,36 +28,36 @@
 
 #pragma once
 
-#define NK_USE_UNQUALIFIED_NAMES
-#include <drone_controller/CredentialManagerInterface.idl.h>
+#include "../include/credential_manager.h"
 
+#define NK_USE_UNQUALIFIED_NAMES
+#include <drone_controller/CredentialManager.edl.cpp.h>
+
+using namespace kosipc::stdcpp::drone_controller;
+
+class ICredentialManager : public CredentialManagerInterface {
+public:
 /**
  * \~English IPC message handler. See \ref signMessage.
  * \~Russian Обработчик IPC-сообщения. См. \ref signMessage.
  */
-nk_err_t SignMessageImpl(struct CredentialManagerInterface *self,
-                    const CredentialManagerInterface_SignMessage_req *req, const struct nk_arena *reqArena,
-                    CredentialManagerInterface_SignMessage_res *res, struct nk_arena *resArena);
+    void SignMessage(const std::string& message, uint8_t& success, std::string& signature) {
+        //TODO: Rewrite to cpp way
+        char m[MaxMessageLength + 1] = {0};
+        char s[MaxSignatureLength + 1] = {0};
+        message.copy(m, message.size() + 1);
+        success = getMessageSignature(m, s);
+        signature = std::string(s);
+    }
+
 /**
  * \~English IPC message handler. See \ref checkSignature.
  * \~Russian Обработчик IPC-сообщения. См. \ref checkSignature.
  */
-nk_err_t CheckSignatureImpl(struct CredentialManagerInterface *self,
-                    const CredentialManagerInterface_CheckSignature_req *req, const struct nk_arena *reqArena,
-                    CredentialManagerInterface_CheckSignature_res *res, struct nk_arena *resArena);
-
-/**
- * \~English Creates an CredentialManagerInterface C++ interface and maps its methods to IPC message handlers.
- * \~Russian Создает C++ интерфейс CredentialManagerInterface и сопоставляет его методы с обработчиками IPC-сообщений.
- */
-static struct CredentialManagerInterface *CreateCredentialManagerInterfaceImpl(void) {
-    static const struct CredentialManagerInterface_ops Ops = {
-        .SignMessage = SignMessageImpl, .CheckSignature = CheckSignatureImpl
-    };
-
-    static CredentialManagerInterface obj = {
-        .ops = &Ops
-    };
-
-    return &obj;
-}
+    void CheckSignature(const std::string& message, uint8_t source, uint8_t& success, uint8_t& correct) {
+        //TODO: Rewrite to cpp way
+        char m[MaxMessageLength + 1] = {0};
+        message.copy(m, message.size() + 1);
+        success = checkMessageSignature(m, MessageSource(source), correct);
+    }
+};

@@ -10,72 +10,70 @@
  */
 
 #include "../include/logger.h"
-#include "../../shared/include/ipc_messages_initialization.h"
 #include "../../shared/include/ipc_messages_server_connector.h"
 
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/ringbuffer_sink.h>
-#include <spdlog/pattern_formatter.h>
-#include <spdlog/spdlog.h>
+#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include <unistd.h>
+#include <cstdio>
+#include <filesystem>
+#include <component/logrr/cpp/logger.h>
 
 /** \cond */
 bool serverIsReady = false;
 char logMessage[1024] = {0};
-
-std::shared_ptr<spdlog::logger> logger;
-std::shared_ptr<spdlog::sinks::ringbuffer_sink_mt> ringSink;
 /** \endcond */
 
 int createLog() {
-    auto consoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    consoleSink->set_formatter(std::make_unique<spdlog::pattern_formatter>(
-        "[%Y-%m-%dT%H:%M:%S][%^%l%$]%v", spdlog::pattern_time_type::local, "\n"));
-    consoleSink->set_level(spdlog::level::trace);
-    auto fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("/logs/flight_controller.log", true);
-    fileSink->set_formatter(std::make_unique<spdlog::pattern_formatter>(
-        "[%Y-%m-%dT%H:%M:%S][%^%l%$]%v", spdlog::pattern_time_type::local, "\n"));
-    fileSink->set_level(spdlog::level::trace);
-    ringSink = std::make_shared<spdlog::sinks::ringbuffer_sink_mt>(1);
-    ringSink->set_formatter(std::make_unique<spdlog::pattern_formatter>(
-        "[%Y-%m-%dT%H:%M:%S][%^%l%$]%v", spdlog::pattern_time_type::local, "\n"));
-    ringSink->set_level(spdlog::level::trace);
+    if (std::filesystem::exists("/logs/apps/Drone Controller/Drone Controller.log")) {
+        int count = std::distance(std::filesystem::directory_iterator("/logs/apps/Drone Controller"),
+            std::filesystem::directory_iterator{});
+        char newFileName[64] = {0};
+        snprintf(newFileName, 64, "/logs/apps/Drone Controller/prev_%d.log", count);
+        std::rename("/logs/apps/Drone Controller/Drone Controller.log", newFileName);
+        std::remove("/logs/apps/Drone Controller/Drone Controller.log");
+    }
 
-    spdlog::sinks_init_list sinks {consoleSink, fileSink, ringSink};
-    logger = std::make_shared<spdlog::logger>("Flight Controller", sinks);
-    spdlog::register_logger(logger);
-    spdlog::set_default_logger(logger);
-    spdlog::flush_on(spdlog::level::trace);
-
+    logrr::Init("Drone Controller");
     return 1;
 }
 
 int addLogEntry(char* entry, int level) {
+    char logHeader[32] = {0};
     switch (level) {
     case 0:
-        SPDLOG_LOGGER_TRACE(logger, entry);
+        LOG(TRACE, entry);
+        strcpy(logHeader, "[Trace]");
         break;
     case 1:
-        SPDLOG_LOGGER_DEBUG(logger, entry);
+        LOG(DEBUG, entry);
+        strcpy(logHeader, "[Debug]");
         break;
     case 2:
-        SPDLOG_LOGGER_INFO(logger, entry);
+        LOG(INFO, entry);
+        strcpy(logHeader, "[Info]");
         break;
     case 3:
-        SPDLOG_LOGGER_WARN(logger, entry);
+        LOG(WARNING, entry);
+        strcpy(logHeader, "[Warning]");
         break;
     case 4:
-        SPDLOG_LOGGER_ERROR(logger, entry);
+        LOG(ERROR, entry);
+        strcpy(logHeader, "[Error]");
         break;
     case 5:
-        SPDLOG_LOGGER_CRITICAL(logger, entry);
+        LOG(CRITICAL, entry);
+        strcpy(logHeader, "[Critical]");
         break;
     }
 
     if (serverIsReady) {
-        snprintf(logMessage, 1024, "log=%s", ringSink->last_formatted()[0].c_str());
+        time_t now = time(NULL);
+        char timeStr[32] = {0};
+        strftime(timeStr, 32, "[%Y-%m-%d %H:%M:%S]", localtime(&now));
+        snprintf(logMessage, 1024, "log=%s %s %s", timeStr, logHeader, entry);
         publishMessage("api/logs", logMessage);
     }
     else if (strstr(entry, "[Server Connector] Initialization is finished"))

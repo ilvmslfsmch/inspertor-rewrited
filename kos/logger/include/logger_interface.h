@@ -28,29 +28,23 @@
 
 #pragma once
 
-#define NK_USE_UNQUALIFIED_NAMES
-#include <drone_controller/LoggerInterface.idl.h>
+#include "../include/logger.h"
 
+#define NK_USE_UNQUALIFIED_NAMES
+#include <drone_controller/Logger.edl.cpp.h>
+
+using namespace kosipc::stdcpp::drone_controller;
+
+class ILogger : public LoggerInterface {
+public:
 /**
  * \~English IPC message handler. See \ref logEntry.
  * \~Russian Обработчик IPC-сообщения. См. \ref logEntry.
  */
-nk_err_t LogImpl(struct LoggerInterface *self,
-                    const LoggerInterface_Log_req *req, const struct nk_arena *reqArena,
-                    LoggerInterface_Log_res *res, struct nk_arena *resArena);
-
-/**
- * \~English Creates an LoggerInterface C++ interface and maps its methods to IPC message handlers.
- * \~Russian Создает C++ интерфейс LoggerInterface и сопоставляет его методы с обработчиками IPC-сообщений.
- */
-static struct LoggerInterface *CreateLoggerInterfaceImpl(void) {
-    static const struct LoggerInterface_ops Ops = {
-        .Log = LogImpl
-    };
-
-    static LoggerInterface obj = {
-        .ops = &Ops
-    };
-
-    return &obj;
-}
+    void Log(const std::string& logEntry, uint8_t logLevel, uint8_t& success) {
+        //TODO: Rewrite to cpp way
+        char l[MaxLogEntry + 1] = {0};
+        logEntry.copy(l, logEntry.size() + 1);
+        success = addLogEntry(l, logLevel);
+    }
+};

@@ -28,43 +28,40 @@
 
 #pragma once
 
-#define NK_USE_UNQUALIFIED_NAMES
-#include <drone_controller/NavigationSystemInterface.idl.h>
+#include "../include/navigation_system.h"
 
+#define NK_USE_UNQUALIFIED_NAMES
+#include <drone_controller/NavigationSystem.edl.cpp.h>
+
+using namespace kosipc::stdcpp::drone_controller;
+
+class INavigationSystem : public NavigationSystemInterface {
+public:
 /**
  * \~English IPC message handler. See \ref getCoords.
  * \~Russian Обработчик IPC-сообщения. См. \ref getCoords.
  */
-nk_err_t GetCoordsImpl(struct NavigationSystemInterface *self,
-                    const NavigationSystemInterface_GetCoords_req *req, const struct nk_arena *reqArena,
-                    NavigationSystemInterface_GetCoords_res *res, struct nk_arena *resArena);
+    void GetCoords(uint8_t& success, int32_t& lat, int32_t& lng, int32_t& alt) {
+        success = getPosition(lat, lng, alt);
+    }
+
 /**
  * \~English IPC message handler. See \ref getGpsInfo.
  * \~Russian Обработчик IPC-сообщения. См. \ref getGpsInfo.
  */
-nk_err_t GetGpsInfoImpl(struct NavigationSystemInterface *self,
-                    const NavigationSystemInterface_GetGpsInfo_req *req, const struct nk_arena *reqArena,
-                    NavigationSystemInterface_GetGpsInfo_res *res, struct nk_arena *resArena);
+    void GetGpsInfo(uint8_t& success, int32_t& dop, int32_t& sats) {
+        float d;
+        success = getInfo(d, sats);
+        std::memcpy(&dop, &d, sizeof(float));
+    }
+
 /**
  * \~English IPC message handler. See \ref getGpsInfo.
  * \~Russian Обработчик IPC-сообщения. См. \ref getGpsInfo.
  */
-nk_err_t GetSpeedImpl(struct NavigationSystemInterface *self,
-                    const NavigationSystemInterface_GetSpeed_req *req, const struct nk_arena *reqArena,
-                    NavigationSystemInterface_GetSpeed_res *res, struct nk_arena *resArena);
-
-/**
- * \~English Creates an NavigationSystemInterface C++ interface and maps its methods to IPC message handlers.
- * \~Russian Создает C++ интерфейс NavigationSystemInterface и сопоставляет его методы с обработчиками IPC-сообщений.
- */
-static struct NavigationSystemInterface *CreateNavigationSystemInterfaceImpl(void) {
-    static const struct NavigationSystemInterface_ops Ops = {
-        .GetCoords = GetCoordsImpl, .GetGpsInfo = GetGpsInfoImpl, .GetSpeed = GetSpeedImpl
-    };
-
-    static NavigationSystemInterface obj = {
-        .ops = &Ops
-    };
-
-    return &obj;
-}
+    void GetSpeed(uint8_t& success, int32_t& speed) {
+        float s;
+        success = getSpeed(s);
+        std::memcpy(&speed, &s, sizeof(float));
+    }
+};

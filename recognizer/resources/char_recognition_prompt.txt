@@ -1,0 +1,8 @@
+Analyze the image and find all pairs consisting of a Latin letter and a digit (e.g., A1, E2).
+Only look for letters 'A' and 'E' followed by any digit (0-9). The characters may be rotated. Ignore any other characters or single characters that are not part of such a pair.
+
+Return the result as a JSON array of strings.
+If no such pairs are found, return an empty array: [].
+
+Example of a valid response:
+["A1", "E5", "A3"]

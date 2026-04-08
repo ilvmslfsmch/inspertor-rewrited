@@ -4,175 +4,195 @@
  * \~Russian \brief Реализация методов-оберток для отправки IPC-сообщений компоненту AutopilotConnector.
  */
 
-#include "../include/ipc_messages_autopilot_connector.h"
-#include "../include/initialization_interface.h"
+#include <chrono>
+#include <iterator>
+#include <iostream>
+#include <string>
+#include <thread>
+#include <vector>
+#include <kosipc/api.h>
 
-#include <stddef.h>
-#include <unistd.h>
+#include "../include/ipc_messages_autopilot_connector.h"
 
 #define NK_USE_UNQUALIFIED_NAMES
-#include <drone_controller/AutopilotConnectorInterface.idl.h>
+#include <drone_controller/AutopilotConnectorInterface.idl.cpp.h>
+
+using namespace std::chrono_literals;
+using namespace kosipc::stdcpp::drone_controller;
 
 int waitForArmRequest() {
-    NkKosTransport transport;
-    nk_iid_t riid;
-    initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
-
-    struct AutopilotConnectorInterface_proxy proxy;
-    AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
-
-    AutopilotConnectorInterface_WaitForArmRequest_req req;
-    AutopilotConnectorInterface_WaitForArmRequest_res res;
+    //TODO: rewrite without PureClient
+    uint8_t success;
+    kosipc::Application app = kosipc::MakeApplicationPureClient();
+    auto proxy              = app.MakeProxy<AutopilotConnectorInterface>(kosipc::ConnectStaticChannel("autopilot_connector_connection", "interface"));
 
     while (true) {
-        if ((AutopilotConnectorInterface_WaitForArmRequest(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success)
+        try {
+            proxy->WaitForArmRequest(success);
+        }
+        catch (...) {
+            std::cerr << "Error in waitForArmRequest" << std::endl;
             return 1;
-        sleep(1);
+        }
+
+        if (success)
+            return 1;
+
+        std::this_thread::sleep_for(1000ms);
     }
 
     return 0;
 }
 
 int permitArm() {
-    NkKosTransport transport;
-    nk_iid_t riid;
-    initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
+    //TODO: rewrite without PureClient
+    uint8_t success;
+    kosipc::Application app = kosipc::MakeApplicationPureClient();
+    auto proxy              = app.MakeProxy<AutopilotConnectorInterface>(kosipc::ConnectStaticChannel("autopilot_connector_connection", "interface"));
+    try {
+        proxy->PermitArm(success);
+    }
+    catch (...) {
+        std::cerr << "Error in permitArm" << std::endl;
+        return 1;
+    }
 
-    struct AutopilotConnectorInterface_proxy proxy;
-    AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
-
-    AutopilotConnectorInterface_PermitArm_req req;
-    AutopilotConnectorInterface_PermitArm_res res;
-
-    return ((AutopilotConnectorInterface_PermitArm(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success);
+    return success;
 }
 
 int forbidArm() {
-    NkKosTransport transport;
-    nk_iid_t riid;
-    initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
+    //TODO: rewrite without PureClient
+    uint8_t success;
+    kosipc::Application app = kosipc::MakeApplicationPureClient();
+    auto proxy              = app.MakeProxy<AutopilotConnectorInterface>(kosipc::ConnectStaticChannel("autopilot_connector_connection", "interface"));
 
-    struct AutopilotConnectorInterface_proxy proxy;
-    AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+    try {
+        proxy->ForbidArm(success);
+    }
+    catch (...) {
+        std::cerr << "Error in forbidArm" << std::endl;
+        return 1;
+    }
 
-    AutopilotConnectorInterface_ForbidArm_req req;
-    AutopilotConnectorInterface_ForbidArm_res res;
-
-    return ((AutopilotConnectorInterface_ForbidArm(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success);
+    return success;
 }
 
 int pauseFlight() {
-    NkKosTransport transport;
-    nk_iid_t riid;
-    initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
+    //TODO: rewrite without PureClient
+    uint8_t success;
+    kosipc::Application app = kosipc::MakeApplicationPureClient();
+    auto proxy              = app.MakeProxy<AutopilotConnectorInterface>(kosipc::ConnectStaticChannel("autopilot_connector_connection", "interface"));
 
-    struct AutopilotConnectorInterface_proxy proxy;
-    AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+    try {
+        proxy->PauseFlight(success);
+    }
+    catch (...) {
+        std::cerr << "Error in pauseFlight" << std::endl;
+        return 1;
+    }
 
-    AutopilotConnectorInterface_PauseFlight_req req;
-    AutopilotConnectorInterface_PauseFlight_res res;
-
-    return ((AutopilotConnectorInterface_PauseFlight(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success);
+    return success;
 }
 
 int resumeFlight() {
-    NkKosTransport transport;
-    nk_iid_t riid;
-    initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
+    //TODO: rewrite without PureClient
+    uint8_t success;
+    kosipc::Application app = kosipc::MakeApplicationPureClient();
+    auto proxy              = app.MakeProxy<AutopilotConnectorInterface>(kosipc::ConnectStaticChannel("autopilot_connector_connection", "interface"));
 
-    struct AutopilotConnectorInterface_proxy proxy;
-    AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+    try {
+        proxy->ResumeFlight(success);
+    }
+    catch (...) {
+        std::cerr << "Error in resumeFlight" << std::endl;
+        return 1;
+    }
 
-    AutopilotConnectorInterface_ResumeFlight_req req;
-    AutopilotConnectorInterface_ResumeFlight_res res;
-
-    return ((AutopilotConnectorInterface_ResumeFlight(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success);
+    return success;
 }
 
 int abortMission() {
-    NkKosTransport transport;
-    nk_iid_t riid;
-    initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
+    //TODO: rewrite without PureClient
+    uint8_t success;
+    kosipc::Application app = kosipc::MakeApplicationPureClient();
+    auto proxy              = app.MakeProxy<AutopilotConnectorInterface>(kosipc::ConnectStaticChannel("autopilot_connector_connection", "interface"));
 
-    struct AutopilotConnectorInterface_proxy proxy;
-    AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+    try {
+        proxy->AbortMission(success);
+    }
+    catch (...) {
+        std::cerr << "Error in abortMission" << std::endl;
+        return 1;
+    }
 
-    AutopilotConnectorInterface_AbortMission_req req;
-    AutopilotConnectorInterface_AbortMission_res res;
-
-    return ((AutopilotConnectorInterface_AbortMission(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success);
+    return success;
 }
 
 int changeSpeed(int32_t speed) {
-    NkKosTransport transport;
-    nk_iid_t riid;
-    initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
+    //TODO: rewrite without PureClient
+    uint8_t success;
+    kosipc::Application app = kosipc::MakeApplicationPureClient();
+    auto proxy              = app.MakeProxy<AutopilotConnectorInterface>(kosipc::ConnectStaticChannel("autopilot_connector_connection", "interface"));
 
-    struct AutopilotConnectorInterface_proxy proxy;
-    AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+    try {
+        proxy->ChangeSpeed(speed, success);
+    }
+    catch (...) {
+        std::cerr << "Error in changeSpeed: speed=" << speed << std::endl;
+        return 1;
+    }
 
-    AutopilotConnectorInterface_ChangeSpeed_req req;
-    AutopilotConnectorInterface_ChangeSpeed_res res;
-
-    req.speed = speed;
-
-    return ((AutopilotConnectorInterface_ChangeSpeed(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success);
+    return success;
 }
 
 int changeAltitude(int32_t altitude) {
-    NkKosTransport transport;
-    nk_iid_t riid;
-    initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
+    //TODO: rewrite without PureClient
+    uint8_t success;
+    kosipc::Application app = kosipc::MakeApplicationPureClient();
+    auto proxy              = app.MakeProxy<AutopilotConnectorInterface>(kosipc::ConnectStaticChannel("autopilot_connector_connection", "interface"));
 
-    struct AutopilotConnectorInterface_proxy proxy;
-    AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+    try {
+        proxy->ChangeAltitude(altitude, success);
+    }
+    catch (...) {
+        std::cerr << "Error in changeAltitude: altitude=" << altitude << std::endl;
+        return 1;
+    }
 
-    AutopilotConnectorInterface_ChangeAltitude_req req;
-    AutopilotConnectorInterface_ChangeAltitude_res res;
-
-    req.altitude = altitude;
-
-    return ((AutopilotConnectorInterface_ChangeAltitude(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success);
+    return success;
 }
 
 int changeWaypoint(int32_t latitude, int32_t longitude, int32_t altitude) {
-    NkKosTransport transport;
-    nk_iid_t riid;
-    initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
+    //TODO: rewrite without PureClient
+    uint8_t success;
+    kosipc::Application app = kosipc::MakeApplicationPureClient();
+    auto proxy              = app.MakeProxy<AutopilotConnectorInterface>(kosipc::ConnectStaticChannel("autopilot_connector_connection", "interface"));
 
-    struct AutopilotConnectorInterface_proxy proxy;
-    AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+    try {
+        proxy->ChangeWaypoint(latitude, longitude, altitude, success);
+    }
+    catch (...) {
+        std::cerr << "Error in changeWaypoint: latitude=" << latitude << ", longitude=" << longitude << ", altitude=" << altitude << std::endl;
+        return 1;
+    }
 
-    AutopilotConnectorInterface_ChangeWaypoint_req req;
-    AutopilotConnectorInterface_ChangeWaypoint_res res;
-
-    req.latitude = latitude;
-    req.longitude = longitude;
-    req.altitude = altitude;
-
-    return ((AutopilotConnectorInterface_ChangeWaypoint(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success);
+    return success;
 }
 
 int setMission(uint8_t* mission, uint32_t missionSize) {
-    NkKosTransport transport;
-    nk_iid_t riid;
-    initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
+    //TODO: rewrite without PureClient and ugly sizeof
+    uint8_t success;
+    kosipc::Application app = kosipc::MakeApplicationPureClient();
+    std::vector<uint8_t> m(mission, mission + sizeof mission / sizeof mission[0]);
+    auto proxy              = app.MakeProxy<AutopilotConnectorInterface>(kosipc::ConnectStaticChannel("autopilot_connector_connection", "interface"));
 
-    struct AutopilotConnectorInterface_proxy proxy;
-    AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+    try {
+        proxy->SetMission(m, m.size(), success);
+    }
+    catch (...) {
+        std::cerr << "Error in setMission" << std::endl;
+        return 1;
+    }
 
-    AutopilotConnectorInterface_SetMission_req req;
-    AutopilotConnectorInterface_SetMission_res res;
-
-    req.size = missionSize;
-    char reqBuffer[AutopilotConnectorInterface_SetMission_req_arena_size];
-    struct nk_arena reqArena = NK_ARENA_INITIALIZER(reqBuffer, reqBuffer + sizeof(reqBuffer));
-    nk_arena_reset(&reqArena);
-
-    nk_uint8_t* msg = nk_arena_alloc(nk_uint8_t, &reqArena, &(req.mission), missionSize);
-    if ((msg == NULL) || (missionSize > AutopilotConnectorInterface_SetMission_req_arena_size))
-        return 0;
-    memcpy(msg, mission, missionSize);
-
-    return ((AutopilotConnectorInterface_SetMission(&proxy.base, &req, &reqArena, &res, NULL) == rcOk) && res.success);
+    return success;
 }

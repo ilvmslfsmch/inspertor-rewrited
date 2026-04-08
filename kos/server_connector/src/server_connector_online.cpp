@@ -85,7 +85,7 @@ int setMacId() {
 }
 
 int initServerConnector() {
-    if (!wait_for_network()) {
+    if (!wait_for_iface(DEFAULT_INTERFACE, IWF_EXISTS, DEFAULT_TIMEOUT) || !configure_net_iface(DEFAULT_INTERFACE, DEFAULT_ADDR, DEFAULT_MASK, DEFAULT_GATEWAY, DEFAULT_MTU)) {
         logEntry("Connection to network has failed", ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
@@ -115,19 +115,17 @@ int initServerConnector() {
     subscriber->subscribe(NULL, topic);
     snprintf(topic, 64, "api/nmission/response/%s", boardName);
     subscriber->subscribe(NULL, topic);
-    snprintf(topic, 64, "api/rfid/response/%s", boardName);
+    snprintf(topic, 64, "api/tag/response/%s", boardName);
     subscriber->subscribe(NULL, topic);
-#ifdef IS_INSPECTOR
-    snprintf(topic, 64, "api/dm/deliverer/recv/%s", boardName);
-#else
-    snprintf(topic, 64, "api/dm/inspector/recv/%s", boardName);
-#endif
+    snprintf(topic, 64, "api/image/response/%s", boardName);
+    subscriber->subscribe(NULL, topic);
+    snprintf(topic, 64, "api/dm/%s/%s", boardName, PARTNER_ID);
     subscriber->subscribe(NULL, topic);
     subscriber->subscribe(NULL, "api/forbidden_zones");
     subscriberThread = std::thread([&](){ subscriber->loop_forever(); });
 
-        return 1;
-    }
+    return 1;
+}
 
 int requestServer(char* query, char* response, uint32_t responseSize) {
     char request[BUFFER_SIZE] = {0};

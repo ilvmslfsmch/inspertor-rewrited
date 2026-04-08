@@ -90,6 +90,9 @@ entities:
 - name: drone_controller.Logger
   env:
     VFS_FILESYSTEM_BACKEND: client:kl.VfsSdCardFs
+    LOGRR_LOG_PROVIDER_STATIC_CONN_ID: LogrrServerLogProvider
+    LOGRR_SERVER_NAME: logrr.LogrrServer
+    LOGRR_LOG_PROVIDER_DENY_DYNAMIC_CONN: 'OFF'
   connections:
   - target: kl.VfsSdCardFs
     id: kl.VfsSdCardFs

@@ -19,11 +19,11 @@ int getRsaKey() {
     return generateRsaKey();
 }
 
-int setRsaKey(char* key) {
+int setRsaKey(char* key, MessageSource source) {
     return 1;
 }
 
-int checkMessageSignature(char* message, uint8_t &correct) {
+int checkMessageSignature(char* message, MessageSource source, uint8_t &correct) {
     correct = 1;
     return 1;
 }

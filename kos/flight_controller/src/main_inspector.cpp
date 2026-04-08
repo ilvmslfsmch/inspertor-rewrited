@@ -5,8 +5,6 @@
  */
 
 #include "../include/flight_controller.h"
-#include "../../shared/include/initialization_interface.h"
-#include "../../shared/include/ipc_messages_initialization.h"
 #include "../../shared/include/ipc_messages_autopilot_connector.h"
 #include "../../shared/include/ipc_messages_credential_manager.h"
 #include "../../shared/include/ipc_messages_navigation_system.h"
@@ -47,7 +45,7 @@ void pingSession() {
 
         if (strcmp(pingMessage, "")) {
             uint8_t authenticity = 0;
-            if (!checkSignature(pingMessage, authenticity) || !authenticity) {
+            if (!checkSignature(pingMessage, MessageSource::SERVER_ORVD, authenticity) || !authenticity) {
                 logEntry("Failed to check signature of ping received through Server Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
                 continue;
             }
@@ -75,7 +73,7 @@ void serverUpdateCheck() {
         if (receiveSubscription("api/flight_status/", message, 4096)) {
             if (strcmp(message, "")) {
                 uint8_t authenticity = 0;
-                if (checkSignature(message, authenticity) || !authenticity) {
+                if (checkSignature(message, MessageSource::SERVER_ORVD, authenticity) || !authenticity) {
                     if (strstr(message, "$Flight -1#")) {
                         logEntry("Emergency stop request is received. Disabling motors", ENTITY_NAME, LogLevel::LOG_INFO);
                         if (!enableBuzzer())
@@ -100,7 +98,7 @@ void serverUpdateCheck() {
         if (receiveSubscription("api/forbidden_zones", message, 4096)) {
             if (strcmp(message, "")) {
                 uint8_t authenticity = 0;
-                if (checkSignature(message, authenticity) || !authenticity) {
+                if (checkSignature(message, MessageSource::SERVER_ORVD, authenticity) || !authenticity) {
                     deleteNoFlightAreas();
                     loadNoFlightAreas(message);
                     logEntry("New no-flight areas are received from the server", ENTITY_NAME, LogLevel::LOG_INFO);
@@ -157,7 +155,7 @@ int askForMissionApproval(char* mission, int& result) {
 
     uint8_t authenticity = 0;
     //Checking the signature of the received message
-    if (!checkSignature(message, authenticity) || !authenticity) {
+    if (!checkSignature(message, MessageSource::SERVER_ORVD, authenticity) || !authenticity) {
         logEntry("Failed to check signature of new mission received through Server Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
         free(message);
         return 0;
@@ -194,37 +192,6 @@ int main(void) {
     char signBuffer[257] = {0};
     char publicationBuffer[1024] = {0};
     char subscriptionBuffer[4096] = {0};
-    //Before do anything, we need to ensure, that other modules are ready to work
-    while (!waitForInit("logger_connection", "Logger")) {
-        snprintf(logBuffer, 256, "Failed to receive initialization notification from Logger. Trying again in %ds", RETRY_DELAY_SEC);
-        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
-        sleep(RETRY_DELAY_SEC);
-    }
-    while (!waitForInit("periphery_controller_connection", "PeripheryController")) {
-        snprintf(logBuffer, 256, "Failed to receive initialization notification from Periphery Controller. Trying again in %ds", RETRY_DELAY_SEC);
-        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
-        sleep(RETRY_DELAY_SEC);
-    }
-    while (!waitForInit("autopilot_connector_connection", "AutopilotConnector")) {
-        snprintf(logBuffer, 256, "Failed to receive initialization notification from Autopilot Connector. Trying again in %ds", RETRY_DELAY_SEC);
-        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
-        sleep(RETRY_DELAY_SEC);
-    }
-    while (!waitForInit("navigation_system_connection", "NavigationSystem")) {
-        snprintf(logBuffer, 256, "Failed to receive initialization notification from Navigation System. Trying again in %ds", RETRY_DELAY_SEC);
-        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
-        sleep(RETRY_DELAY_SEC);
-    }
-    while (!waitForInit("server_connector_connection", "ServerConnector")) {
-        snprintf(logBuffer, 256, "Failed to receive initialization notification from Server Connector. Trying again in %ds", RETRY_DELAY_SEC);
-        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
-        sleep(RETRY_DELAY_SEC);
-    }
-    while (!waitForInit("credential_manager_connection", "CredentialManager")) {
-        snprintf(logBuffer, 256, "Failed to receive initialization notification from Credential Manager. Trying again in %ds", RETRY_DELAY_SEC);
-        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
-        sleep(RETRY_DELAY_SEC);
-    }
 
     //Get ID from ServerConnector
     while (!getBoardId(boardId)) {
@@ -257,7 +224,7 @@ int main(void) {
     }
 
     uint8_t authenticity = 0;
-    while (!checkSignature(authResponse, authenticity) || !authenticity) {
+    while (!checkSignature(authResponse, MessageSource::SERVER_ORVD, authenticity) || !authenticity) {
         snprintf(logBuffer, 256, "Failed to check signature of auth response received through Server Connector. Trying again in %ds", RETRY_DELAY_SEC);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(RETRY_DELAY_SEC);
@@ -269,7 +236,7 @@ int main(void) {
         sleep(1);
 
     authenticity = 0;
-    while (!checkSignature(subscriptionBuffer, authenticity) || !authenticity) {
+    while (!checkSignature(subscriptionBuffer, MessageSource::SERVER_ORVD, authenticity) || !authenticity) {
         snprintf(logBuffer, 256, "Failed to check signature of mission received through Server Connector. Trying again in %ds", RETRY_DELAY_SEC);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(RETRY_DELAY_SEC);
@@ -310,7 +277,7 @@ int main(void) {
             sleep(1);
 
         authenticity = 0;
-        while (!checkSignature(subscriptionBuffer, authenticity) || !authenticity) {
+        while (!checkSignature(subscriptionBuffer, MessageSource::SERVER_ORVD, authenticity) || !authenticity) {
             snprintf(logBuffer, 256, "Failed to check signature of arm response received through Server Connector. Trying again in %ds", RETRY_DELAY_SEC);
             logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
             sleep(RETRY_DELAY_SEC);
@@ -346,19 +313,28 @@ int main(void) {
     //If we get here, the drone is able to arm and start the mission
     //The flight is need to be controlled from now on
 
-    /* RFID Check */
-    //Scan RFID tag with 'scanRfid' function
-    //Calculate a signature for message "tag=%s", rfid with 'signMessage'
-    //Send message "tag=%s&sig=0x%s", tag, signature to the topic "api/rfid" with 'publishMessage'
-    //Receive the response from the topic "api/rfid/response/" with 'receiveSubscription'
-    //Signature of the received message can be checked with 'checkSignature'
-    //If the response contains "$TRUE#" than the tag is cargo destination, and "$FALSE#" otherwise
+    /* Tag Recognition */
+    //Tag recognition is done via AI-driven recognition server.
+    //First, the request should be done with 'requestRecognition' function.
+    //It takes picture with a camera and sends it to AI-driven recognition server.
+    //The response could be received with 'getRecognitionResponse'.
+    //Note, that result may not be ready immediately.
+    //It returns recognized symbol or 'NONE' with an altitude value to take a better picture.
+
+    /* Delivery Point Determination */
+    //If the symbol is recognized it should be sent to the ORVD server.
+    //Calculate a signature for message "/api/tag/request?id={boardId}&tag={Tag}" with 'signMessage'.
+    //Send message "tag={Tag}&sig=0x{signature}" to the topic "api/tag/request" with 'publishMessage'.
+    //Receive the response from the topic "api/tag/response/" with 'receiveSubscription'.
+    //Signature of the received message can be checked with 'checkSignature'.
+    //If the response contains "$TRUE {Tag}#" than the tag is cargo destination,
+    //if it contains "$FALSE {Tag}#", than the tag is not the destination point (or wrong tag),
+    //if it contains "$ACCEPTED {Tag}#", than the bonus tag was accepted.
 
     /* Send message to deliverer */
-    //Calculate a signature for message "message=%s", message_text
-    //Message content is not specified and can be in any form
-    //Send message "message=%s&sig=0x%s", message, signature to the topic "api/dm/%s/send", receiver_id = deliverer
-    //with 'publishMessage'
+    //Calculate a signature for your message {Message} with 'signMessage'.
+    //Content of {Message} is not specified and can be in any form.
+    //Send message "{Message}#{Signature}" to the topic "api/dm/{PARTNER_ID}" with 'publishMessage'.
 
     while (true)
         sleep(1000);

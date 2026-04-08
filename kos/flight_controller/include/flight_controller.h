@@ -383,7 +383,7 @@ char* getNoFlightAreasHash();
  * \param[in] response String from the ATM server. Substring "$ForbiddenZonesHash hash$" is expected.
  * \param[out] hash String to write hash.
  * \param[in] hashLen Length of the string to write hash
- * \~Russian Извлекает хэш из стркои, полученной от сервера ОРВД.
+ * \~Russian Извлекает хэш из строки, полученной от сервера ОРВД.
  * \param[in] response Строка, пришедшая от сервера ОРВД. Ожидается наличие подстроки "$ForbiddenZonesHash хэш$".
  * \param[out] hash Строка, куда будет записан хэш.
  * \param[in] hashLen Длина строки, куда будет записан хэш.
@@ -400,3 +400,6 @@ void parseNoFlightAreasHash(char* response, char* hash, uint8_t hashLen);
  * \return Возвращает задержку до следующего сеанса связи в секундах.
  */
 uint32_t parseDelay(char* response);
+
+int requestRecognition();
+int getRecognitionResponse(char* tag, int32_t& alt);

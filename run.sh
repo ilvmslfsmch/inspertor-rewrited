@@ -1,9 +1,4 @@
 #! /usr/bin/bash
-export SDK_FOLDER_NAME=KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166
-export SDK_PKG_NAME=KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166_ru.deb
-
-#export SDK_FOLDER_NAME=KasperskyOS-Community-Edition-RaspberryPi4b-wifi
-#export SDK_PKG_NAME=KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0_amd64.deb
 
 source default.env
 rm -f mavproxy/MAVProxy/mav.parm
@@ -18,13 +13,13 @@ tmux send-keys -t flight_controller "cd planner; ./APM_Planner.AppImage" Enter
 tmux split-window -h -l 66% -t flight_controller
 if [[ $* == *"--no-server"* ]]
 	then
-		tmux send-keys -t flight_controller "cd kos; ./cross-build.sh --target sim --mode offline --role inspector --board-id inspector" Enter
+		tmux send-keys -t flight_controller "cd kos; ./cross-build.sh --target sim --mode offline --role inspector" Enter
 		tmux split-window -h -l 50% -t flight_controller
-		tmux send-keys -t flight_controller "cd kos; ./cross-build.sh --target sim --mode offline --role deliverer --board-id deliverer" Enter
+		tmux send-keys -t flight_controller "cd kos; ./cross-build.sh --target sim --mode offline --role deliverer" Enter
 	else
-		tmux send-keys -t flight_controller "cd kos; ./cross-build.sh --target sim --mode online --role inspector --board-id inspector --mqtt-username inspector --mqtt-password secret" Enter
+		tmux send-keys -t flight_controller "cd kos; ./cross-build.sh --target sim --mode online --role inspector --mqtt-username inspector --mqtt-password secret" Enter
 		tmux split-window -h -l 50% -t flight_controller
-		tmux send-keys -t flight_controller "cd kos; ./cross-build.sh --target sim --mode online --role deliverer --board-id deliverer --mqtt-username deliverer --mqtt-password secret" Enter
+		tmux send-keys -t flight_controller "cd kos; ./cross-build.sh --target sim --mode online --role deliverer --mqtt-username deliverer --mqtt-password secret" Enter
 fi
 tmux split-window -v -t flight_controller
 if [[ $* == *"--with-obstacles"* ]]
@@ -42,7 +37,5 @@ fi
 tmux select-pane -t flight_controller:0.0
 tmux split-window -v -t flight_controller
 tmux send-keys -t flight_controller "cd mavproxy/MAVProxy; mavproxy.py --out='127.0.0.1:14550' --out='127.0.0.1:14551' --master='tcp:127.0.0.1:5760' --master='tcp:127.0.0.1:5770' --sitl='127.0.0.1:5501' --sitl='127.0.0.1:5502'" Enter
-#tmux split-window -h -t flight_controller
-#tmux send-keys -t flight_controller "cd mavproxy/MAVProxy; mavproxy.py --out='127.0.0.1:14550' --out='127.0.0.1:14551' --master='tcp:127.0.0.1:5760' --sitl='127.0.0.1:5501'" Enter
 tmux select-pane -t flight_controller:0.0
 tmux attach -t flight_controller

@@ -11,15 +11,18 @@ topic readwrite api/flight_status/+
 topic readwrite api/fmission_kos/+
 topic readwrite api/auth/+
 topic readwrite api/events/+
+topic readwrite api/logs/+
 topic readwrite api/nmission/response/+
 topic readwrite api/nmission/request/+
 topic readwrite api/arm/response/+
 topic readwrite api/arm/request/+
-topic readwrite api/rfid/+
-topic readwrite api/rfid/response/+
+topic readwrite api/tag/request/+
+topic readwrite api/tag/response/+
+topic readwrite api/image/request/+
+topic readwrite api/image/response/+
 topic readwrite api/connection_status
-topic readwrite api/dm/+/send/+
-topic readwrite api/dm/+/recv/+
+topic readwrite api/dm/+/+
+topic readwrite api/dm/+/+
 
 user infopanel
 topic readwrite ping/+
@@ -29,13 +32,18 @@ topic readwrite api/flight_status/+
 topic readwrite api/fmission_kos/+
 topic readwrite api/auth/+
 topic readwrite api/events/+
+topic readwrite api/logs/+
 topic readwrite api/nmission/response/+
 topic readwrite api/nmission/request/+
 topic readwrite api/arm/response/+
 topic readwrite api/arm/request/+
-topic readwrite api/rfid/+
-topic readwrite api/rfid/response/+
+topic readwrite api/tag/request/+
+topic readwrite api/tag/response/+
+topic readwrite api/image/request/+
+topic readwrite api/image/response/+
 topic readwrite api/connection_status
+topic readwrite api/dm/+/+
+topic readwrite api/dm/+/+
 
 user inspector
 topic readwrite ping/inspector
@@ -44,14 +52,17 @@ topic readwrite api/flight_status/inspector
 topic readwrite api/fmission_kos/inspector
 topic readwrite api/auth/inspector
 topic readwrite api/events/inspector
+topic readwrite api/logs/inspector
 topic readwrite api/nmission/response/inspector
 topic readwrite api/nmission/request/inspector
 topic readwrite api/arm/response/inspector
 topic readwrite api/arm/request/inspector
-topic readwrite api/dm/+/send/inspector
-topic readwrite api/rfid/inspector
-topic read api/dm/+/recv/inspector
-topic read api/rfid/response/inspector
+topic readwrite api/dm/+/inspector
+topic readwrite api/tag/request/inspector
+topic readwrite api/image/request/inspector
+topic read api/dm/inspector/+
+topic read api/tag/response/inspector
+topic read api/image/response/inspector
 topic read api/forbidden_zones
 
 user deliverer
@@ -61,14 +72,17 @@ topic readwrite api/flight_status/deliverer
 topic readwrite api/fmission_kos/deliverer
 topic readwrite api/auth/deliverer
 topic readwrite api/events/deliverer
+topic readwrite api/logs/deliverer
 topic readwrite api/nmission/response/deliverer
 topic readwrite api/nmission/request/deliverer
 topic readwrite api/arm/response/deliverer
 topic readwrite api/arm/request/deliverer
-topic readwrite api/dm/+/send/deliverer
-topic readwrite api/rfid/deliverer
-topic read api/dm/+/recv/deliverer
-topic read api/rfid/response/deliverer
+topic readwrite api/dm/+/deliverer
+topic readwrite api/tag/request/deliverer
+topic readwrite api/image/request/deliverer
+topic read api/dm/deliverer/+
+topic read api/tag/response/deliverer
+topic read api/image/response/deliverer
 topic read api/forbidden_zones
 
 # This affects all clients.

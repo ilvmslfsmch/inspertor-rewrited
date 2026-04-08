@@ -11,11 +11,10 @@ else()
 endif()
 
 add_executable (CredentialManager "src/main.cpp" "src/credential_manager.cpp"
-    ${CREDENTIAL_MANAGER_SRC} "src/credential_manager_interface.cpp"
-    "../shared/src/initialization_interface.cpp" "../shared/src/ipc_messages_server_connector.cpp"
-    "../shared/src/ipc_messages_initialization.cpp" "../shared/src/ipc_messages_logger.cpp")
-add_dependencies (CredentialManager credential_manager_edl_files)
-add_dependencies (CredentialManager server_connector_idl_files)
+    ${CREDENTIAL_MANAGER_SRC} "../shared/src/ipc_messages_logger.cpp"
+    "../shared/src/ipc_messages_server_connector.cpp")
+add_dependencies (CredentialManager CREDENTIAL_MANAGER_EDL SERVER_CONNECTOR_IDL)
 
 target_compile_definitions (CredentialManager PRIVATE ENTITY_NAME="Credential Manager")
-target_link_libraries (CredentialManager ${vfs_CLIENT_LIB} MbedTLS::mbedtls ${CMAKE_THREAD_LIBS_INIT})
+target_compile_definitions (CredentialManager PRIVATE PARTNER_ID="${PARTNER_ID}")
+bind_nk_targets (CredentialManager vfs::client MbedTLS::mbedtls ${CMAKE_THREAD_LIBS_INIT} CREDENTIAL_MANAGER_EDL SERVER_CONNECTOR_IDL)

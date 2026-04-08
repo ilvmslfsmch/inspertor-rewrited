@@ -28,52 +28,47 @@
 
 #pragma once
 
-#define NK_USE_UNQUALIFIED_NAMES
-#include <drone_controller/PeripheryControllerInterface.idl.h>
+#include "../include/periphery_controller.h"
 
+#define NK_USE_UNQUALIFIED_NAMES
+#include <drone_controller/PeripheryController.edl.cpp.h>
+
+using namespace kosipc::stdcpp::drone_controller;
+
+class IPeripheryController : public PeripheryControllerInterface {
+public:
 /**
  * \~English IPC message handler. See \ref enableBuzzer.
  * \~Russian Обработчик IPC-сообщения. См. \ref enableBuzzer.
  */
-nk_err_t EnableBuzzerImpl(struct PeripheryControllerInterface *self,
-                    const PeripheryControllerInterface_EnableBuzzer_req *req, const struct nk_arena *reqArena,
-                    PeripheryControllerInterface_EnableBuzzer_res *res, struct nk_arena *resArena);
+    void EnableBuzzer(uint8_t& success) {
+        success = startBuzzer();
+    }
+
 /**
  * \~English IPC message handler. See \ref setKillSwitch.
  * \~Russian Обработчик IPC-сообщения. См. \ref setKillSwitch.
  */
-nk_err_t SetKillSwitchImpl(struct PeripheryControllerInterface *self,
-                    const PeripheryControllerInterface_SetKillSwitch_req *req, const struct nk_arena *reqArena,
-                    PeripheryControllerInterface_SetKillSwitch_res *res, struct nk_arena *resArena);
+    void SetKillSwitch(uint8_t enable, uint8_t& success) {
+        success = setKillSwitch(enable);
+    }
+
 /**
  * \~English IPC message handler. See \ref setCargoLock.
  * \~Russian Обработчик IPC-сообщения. См. \ref setCargoLock.
  */
-nk_err_t SetCargoLockImpl(struct PeripheryControllerInterface *self,
-                    const PeripheryControllerInterface_SetCargoLock_req *req, const struct nk_arena *reqArena,
-                    PeripheryControllerInterface_SetCargoLock_res *res, struct nk_arena *resArena);
+    void SetCargoLock(uint8_t enable, uint8_t& success) {
+        success = setCargoLock(enable);
+    }
 
 /**
- * \~English IPC message handler. See \ref scanRfid.
- * \~Russian Обработчик IPC-сообщения. См. \ref scanRfid.
+ * \~English IPC message handler. See \ref takePicture.
+ * \~Russian Обработчик IPC-сообщения. См. \ref takePicture.
  */
-nk_err_t ScanRfidImpl(struct PeripheryControllerInterface *self,
-                    const PeripheryControllerInterface_ScanRfid_req *req, const struct nk_arena *reqArena,
-                    PeripheryControllerInterface_ScanRfid_res *res, struct nk_arena *resArena);
-
-/**
- * \~English Creates an PeripheryControllerInterface C++ interface and maps its methods to IPC message handlers.
- * \~Russian Создает C++ интерфейс PeripheryControllerInterface и сопоставляет его методы с обработчиками IPC-сообщений.
- */
-static struct PeripheryControllerInterface *CreatePeripheryControllerInterfaceImpl(void) {
-    static const struct PeripheryControllerInterface_ops Ops = {
-        .EnableBuzzer = EnableBuzzerImpl, .SetKillSwitch = SetKillSwitchImpl, .SetCargoLock = SetCargoLockImpl,
-        .ScanRfid = ScanRfidImpl
-    };
-
-    static PeripheryControllerInterface obj = {
-        .ops = &Ops
-    };
-
-    return &obj;
-}
+    void TakePicture(std::string& tag, uint8_t& success) {
+        //TODO: Rewrite to cpp way
+        char t[MaxPictureSize + 1] = {0};
+        success = takePicture(t);
+        tag = std::string(t);
+    }
+};

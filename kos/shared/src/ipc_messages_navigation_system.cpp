@@ -4,70 +4,69 @@
  * \~Russian \brief Реализация методов-оберток для отправки IPC-сообщений компоненту NavigationSystem.
  */
 
+#include <string>
+#include <iostream>
+#include <kosipc/api.h>
 #include "../include/ipc_messages_navigation_system.h"
-#include "../include/initialization_interface.h"
-
-#include <stddef.h>
 
 #define NK_USE_UNQUALIFIED_NAMES
-#include <drone_controller/NavigationSystemInterface.idl.h>
+#include <drone_controller/NavigationSystemInterface.idl.cpp.h>
+
+using namespace kosipc::stdcpp::drone_controller;
 
 int getCoords(int32_t &latitude, int32_t &longitude, int32_t &altitude) {
-    NkKosTransport transport;
-    nk_iid_t riid;
-    initSenderInterface("navigation_system_connection", "drone_controller.NavigationSystem.interface", transport, riid);
+    //TODO: rewrite without PureClient
+    uint8_t success;
+    kosipc::Application app = kosipc::MakeApplicationPureClient();
+    auto proxy              = app.MakeProxy<NavigationSystemInterface>(kosipc::ConnectStaticChannel("navigation_system_connection", "interface"));
 
-    struct NavigationSystemInterface_proxy proxy;
-    NavigationSystemInterface_proxy_init(&proxy, &transport.base, riid);
-
-    NavigationSystemInterface_GetCoords_req req;
-    NavigationSystemInterface_GetCoords_res res;
-
-    if ((NavigationSystemInterface_GetCoords(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
+    try {
+        proxy->GetCoords(success, latitude, longitude, altitude);
+    }
+    catch (...) {
+        std::cerr << "Exception on proxy->GetCoords request" << std::endl;
         return 0;
+    }
 
-    latitude = res.lat;
-    longitude = res.lng;
-    altitude = res.alt;
-
-    return 1;
+    return success;
 }
 
 int getGpsInfo(float& dop, int32_t& sats) {
-    NkKosTransport transport;
-    nk_iid_t riid;
-    initSenderInterface("navigation_system_connection", "drone_controller.NavigationSystem.interface", transport, riid);
+    //TODO: rewrite without PureClient
+    uint8_t success;
+    kosipc::Application app = kosipc::MakeApplicationPureClient();
+    auto proxy              = app.MakeProxy<NavigationSystemInterface>(kosipc::ConnectStaticChannel("navigation_system_connection", "interface"));
 
-    struct NavigationSystemInterface_proxy proxy;
-    NavigationSystemInterface_proxy_init(&proxy, &transport.base, riid);
-
-    NavigationSystemInterface_GetGpsInfo_req req;
-    NavigationSystemInterface_GetGpsInfo_res res;
-
-    if ((NavigationSystemInterface_GetGpsInfo(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
+    int32_t d;
+    try {
+        proxy->GetGpsInfo(success, d, sats);
+    }
+    catch (...) {
+        std::cerr << "Exception on proxy->GetGpsInfo request" << std::endl;
         return 0;
+    }
 
-    memcpy(&dop, &(res.dop), sizeof(float));
-    memcpy(&sats, &(res.sats), sizeof(int32_t));
+    std::memcpy(&dop, &d, sizeof(float));
 
-    return 1;
+    return success;
 }
 
 int getEstimatedSpeed(float& speed) {
-    NkKosTransport transport;
-    nk_iid_t riid;
-    initSenderInterface("navigation_system_connection", "drone_controller.NavigationSystem.interface", transport, riid);
+    //TODO: rewrite without PureClient
+    uint8_t success;
+    kosipc::Application app = kosipc::MakeApplicationPureClient();
+    auto proxy              = app.MakeProxy<NavigationSystemInterface>(kosipc::ConnectStaticChannel("navigation_system_connection", "interface"));
 
-    struct NavigationSystemInterface_proxy proxy;
-    NavigationSystemInterface_proxy_init(&proxy, &transport.base, riid);
-
-    NavigationSystemInterface_GetSpeed_req req;
-    NavigationSystemInterface_GetSpeed_res res;
-
-    if ((NavigationSystemInterface_GetSpeed(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
+    int32_t s;
+    try {
+        proxy->GetSpeed(success, s);
+    }
+    catch (...) {
+        std::cerr << "Exception on proxy->GetSpeed request" << std::endl;
         return 0;
+    }
 
-    memcpy(&speed, &(res.speed), sizeof(float));
+    std::memcpy(&speed, &s, sizeof(float));
 
-    return 1;
+    return success;
 }

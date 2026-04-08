@@ -49,8 +49,8 @@ class MQTTTopic:
     NMISSION_REQUEST = 'api/nmission/request/{id}'
     ARM_REQUEST = 'api/arm/request/{id}'
     EVENTS = 'api/events/{id}'
-    RFID = 'api/rfid/{id}'
-    DM_SEND = 'api/dm/{recv_id}/send/{send_id}'
+    TAG_REQUEST = 'api/tag/request/{id}'
+    DM = 'api/dm/{receiver_id}/{sender_id}'
     
     # sendable
     PING = 'ping/{id}'
@@ -61,8 +61,7 @@ class MQTTTopic:
     FMISSION_KOS = 'api/fmission_kos/{id}'
     AUTH = 'api/auth/{id}'
     CONNECTION_STATUS = 'api/connection_status'
-    DM_RECV = 'api/dm/{send_id}/recv/{recv_id}'
-    RFID_RESPONSE = 'api/rfid/response/{id}'
+    TAG_RESPONSE = 'api/tag/response/{id}'
     
 class APIRoute:
     NMISSION = '/api/nmission'
@@ -78,6 +77,8 @@ class APIRoute:
     GET_ALL_FORBIDDEN_ZONES = '/api/get_all_forbidden_zones'
     GET_FORBIDDEN_ZONES_DELTA = '/api/get_forbidden_zones_delta'
     FORBIDDEN_ZONES_HASH = '/api/forbidden_zones_hash'
+    KOS_KEY = '/api/kos_key'
+    TAG = '/api/tag/request'
 
 class AdminRoute:
     INDEX = '/admin'
@@ -119,6 +120,7 @@ class AdminRoute:
     SET_BREAK_COORDS = '/admin/set_break_coords'
     TOGGLE_CHANGE_FORBIDDEN_ZONES = '/admin/toggle_change_forbidden_zones'
     SET_CHANGE_FORBIDDEN_ZONES_COORDS = '/admin/set_change_forbidden_zones_coords'
+    GET_UAV_TAG = '/admin/get_uav_tag'
 
 class GeneralRoute:
     INDEX = '/'

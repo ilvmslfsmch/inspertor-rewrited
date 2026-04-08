@@ -28,95 +28,94 @@
 
 #pragma once
 
-#define NK_USE_UNQUALIFIED_NAMES
-#include <drone_controller/AutopilotConnectorInterface.idl.h>
+#include "../include/autopilot_connector.h"
 
+#define NK_USE_UNQUALIFIED_NAMES
+#include <drone_controller/AutopilotConnector.edl.cpp.h>
+
+using namespace kosipc::stdcpp::drone_controller;
+
+class IAutopilotConnector : public AutopilotConnectorInterface {
+public:
 /**
  * \~English IPC message handler. See \ref waitForArmRequest.
  * \~Russian Обработчик IPC-сообщения. См. \ref waitForArmRequest.
  */
-nk_err_t WaitForArmRequestImpl(struct AutopilotConnectorInterface *self,
-                    const AutopilotConnectorInterface_WaitForArmRequest_req *req, const struct nk_arena *reqArena,
-                    AutopilotConnectorInterface_WaitForArmRequest_res *res, struct nk_arena *resArena);
+    void WaitForArmRequest(uint8_t& success) {
+        success = isArmRequested();
+    }
+
 /**
  * \~English IPC message handler. See \ref permitArm.
  * \~Russian Обработчик IPC-сообщения. См. \ref permitArm.
  */
-nk_err_t PermitArmImpl(struct AutopilotConnectorInterface *self,
-                    const AutopilotConnectorInterface_PermitArm_req *req, const struct nk_arena *reqArena,
-                    AutopilotConnectorInterface_PermitArm_res *res, struct nk_arena *resArena);
+    void PermitArm(uint8_t& success) {
+        success = sendAutopilotCommand(AutopilotCommand::ArmPermit);
+    }
+
 /**
  * \~English IPC message handler. See \ref forbidArm.
  * \~Russian Обработчик IPC-сообщения. См. \ref forbidArm.
  */
-nk_err_t ForbidArmImpl(struct AutopilotConnectorInterface *self,
-                    const AutopilotConnectorInterface_ForbidArm_req *req, const struct nk_arena *reqArena,
-                    AutopilotConnectorInterface_ForbidArm_res *res, struct nk_arena *resArena);
+    void ForbidArm(uint8_t& success) {
+        success = sendAutopilotCommand(AutopilotCommand::ArmForbid);
+    }
+
 /**
  * \~English IPC message handler. See \ref pauseFlight.
  * \~Russian Обработчик IPC-сообщения. См. \ref pauseFlight.
  */
-nk_err_t PauseFlightImpl(struct AutopilotConnectorInterface *self,
-                    const AutopilotConnectorInterface_PauseFlight_req *req, const struct nk_arena *reqArena,
-                    AutopilotConnectorInterface_PauseFlight_res *res, struct nk_arena *resArena);
+    void PauseFlight(uint8_t& success) {
+        success = sendAutopilotCommand(AutopilotCommand::PauseFlight);
+    }
+
 /**
  * \~English IPC message handler. See \ref resumeFlight.
  * \~Russian Обработчик IPC-сообщения. См. \ref resumeFlight.
  */
-nk_err_t ResumeFlightImpl(struct AutopilotConnectorInterface *self,
-                    const AutopilotConnectorInterface_ResumeFlight_req *req, const struct nk_arena *reqArena,
-                    AutopilotConnectorInterface_ResumeFlight_res *res, struct nk_arena *resArena);
+    void ResumeFlight(uint8_t& success) {
+        success = sendAutopilotCommand(AutopilotCommand::ResumeFlight);
+    }
+
 /**
  * \~English IPC message handler. See \ref abortMission.
  * \~Russian Обработчик IPC-сообщения. См. \ref abortMission.
  */
-nk_err_t AbortMissionImpl(struct AutopilotConnectorInterface *self,
-    const AutopilotConnectorInterface_AbortMission_req *req, const struct nk_arena *reqArena,
-    AutopilotConnectorInterface_AbortMission_res *res, struct nk_arena *resArena);
+    void AbortMission(uint8_t& success) {
+        success = sendAutopilotCommand(AutopilotCommand::AbortMission);
+    }
+
 /**
  * \~English IPC message handler. See \ref changeSpeed.
  * \~Russian Обработчик IPC-сообщения. См. \ref changeSpeed.
  */
-nk_err_t ChangeSpeedImpl(struct AutopilotConnectorInterface *self,
-                    const AutopilotConnectorInterface_ChangeSpeed_req *req, const struct nk_arena *reqArena,
-                    AutopilotConnectorInterface_ChangeSpeed_res *res, struct nk_arena *resArena);
+    void ChangeSpeed(int32_t speed, uint8_t& success) {
+        success = sendAutopilotCommand(AutopilotCommand::ChangeSpeed, speed);
+    }
+
 /**
  * \~English IPC message handler. See \ref changeAltitude.
  * \~Russian Обработчик IPC-сообщения. См. \ref changeAltitude.
  */
-nk_err_t ChangeAltitudeImpl(struct AutopilotConnectorInterface *self,
-                    const AutopilotConnectorInterface_ChangeAltitude_req *req, const struct nk_arena *reqArena,
-                    AutopilotConnectorInterface_ChangeAltitude_res *res, struct nk_arena *resArena);
+    void ChangeAltitude(int32_t altitude, uint8_t& success) {
+        success = sendAutopilotCommand(AutopilotCommand::ChangeAltitude, altitude);
+    }
+
 /**
  * \~English IPC message handler. See \ref changeWaypoint.
  * \~Russian Обработчик IPC-сообщения. См. \ref changeWaypoint.
  */
-nk_err_t ChangeWaypointImpl(struct AutopilotConnectorInterface *self,
-                    const AutopilotConnectorInterface_ChangeWaypoint_req *req, const struct nk_arena *reqArena,
-                    AutopilotConnectorInterface_ChangeWaypoint_res *res, struct nk_arena *resArena);
+    void ChangeWaypoint(int32_t latitude, int32_t longitude, int32_t altitude, uint8_t& success) {
+        success = sendAutopilotCommand(AutopilotCommand::ChangeWaypoint, latitude, longitude, altitude);
+    }
+
 /**
  * \~English IPC message handler. See \ref setMission.
  * \~Russian Обработчик IPC-сообщения. См. \ref setMission.
  */
-nk_err_t SetMissionImpl(struct AutopilotConnectorInterface *self,
-                    const AutopilotConnectorInterface_SetMission_req *req, const struct nk_arena *reqArena,
-                    AutopilotConnectorInterface_SetMission_res *res, struct nk_arena *resArena);
-
-/**
- * \~English Creates an AutopilotConnectorInterface C++ interface and maps its methods to IPC message handlers.
- * \~Russian Создает C++ интерфейс AutopilotConnectorInterface и сопоставляет его методы с обработчиками IPC-сообщений.
- */
-static struct AutopilotConnectorInterface *CreateAutopilotConnectorInterfaceImpl(void) {
-    static const struct AutopilotConnectorInterface_ops Ops = {
-        .WaitForArmRequest = WaitForArmRequestImpl, .PermitArm = PermitArmImpl, .ForbidArm = ForbidArmImpl,
-        .PauseFlight = PauseFlightImpl, .ResumeFlight = ResumeFlightImpl, .AbortMission = AbortMissionImpl,
-        .ChangeSpeed = ChangeSpeedImpl, .ChangeAltitude = ChangeAltitudeImpl, .ChangeWaypoint = ChangeWaypointImpl,
-        .SetMission = SetMissionImpl
-    };
-
-    static AutopilotConnectorInterface obj = {
-        .ops = &Ops
-    };
-
-    return &obj;
-}
+    void SetMission(const std::vector<uint8_t>& mission, uint32_t size, uint8_t& success) {
+        uint8_t m[MaxMissionLength] = {0};
+        std::memcpy(m, mission.data(), mission.size());
+        success = sendAutopilotCommand(AutopilotCommand::SetMission, m, size);
+    }
+};

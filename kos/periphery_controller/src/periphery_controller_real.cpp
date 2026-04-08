@@ -168,42 +168,9 @@ int setBuzzer(bool enable) {
     return setPin(pinBuzzer, enable);
 }
 
-int readRfid(char* tag) {
-    char logBuffer[256] = {0};
-    rtl_size_t writtenBytes, readBytes;
-    uint8_t scanRequest[] = { 0xBB, 0x00, 0x22, 0x00, 0x00, 0x22, 0x7E };
-    uint8_t rfidResponse[] = { 0x02, 0x22 };
-    uint8_t noRfidResponse[] = { 0x01, 0xFF };
-    uint8_t scanResponse[24] = {0};
-    strcpy(tag, "");
-
-    for (int i = 0; i < 50; i++) {
-        UartWrite(rfidUartHandler, scanRequest, 7, NULL, &writtenBytes);
-
-        scanResponse[0] = 0;
-        while (scanResponse[0] != 0xBB)
-            UartRead(rfidUartHandler, (rtl_uint8_t*)scanResponse, 1, NULL, &readBytes);
-        UartRead(rfidUartHandler, (rtl_uint8_t*)(scanResponse + 1), 2, NULL, &readBytes);
-
-        if (!memcmp(scanResponse + 1, rfidResponse, 2)) {
-            UartRead(rfidUartHandler, (rtl_uint8_t*)(scanResponse + 3), 21, NULL, &readBytes);
-            snprintf(tag, 36, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", scanResponse[8], scanResponse[9],
-                scanResponse[10], scanResponse[11], scanResponse[12], scanResponse[13], scanResponse[14], scanResponse[15],
-                scanResponse[16], scanResponse[17], scanResponse[18], scanResponse[19]);
-            snprintf(logBuffer, 256, "Read RFID '%s'", tag);
-            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
-            return 1;
-        }
-        else if (!memcmp(scanResponse + 1, noRfidResponse, 2))
-            UartRead(rfidUartHandler, (rtl_uint8_t*)(scanResponse + 3), 5, NULL, &readBytes);
-        else {
-            snprintf(logBuffer, 256, "Unknown header %02x %02x %02x", scanResponse[0], scanResponse[1], scanResponse[2]);
-            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
-            return 0;
-        }
-    }
-    logEntry("No RFID was read", ENTITY_NAME, LogLevel::LOG_INFO);
-    return 1;
+int takePicture(char* picture) {
+    picture[0] = '\0';
+    return 0;
 }
 
 int setKillSwitch(bool enable) {

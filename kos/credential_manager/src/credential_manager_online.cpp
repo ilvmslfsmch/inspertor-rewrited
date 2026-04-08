@@ -22,6 +22,7 @@
 
 /** \cond */
 mbedtls_rsa_context rsaServer;
+mbedtls_rsa_context rsaTeammate;
 /** \endcond */
 
 /**
@@ -96,7 +97,7 @@ int getRsaKey() {
     if (file == -1) {
         if (!generateRsaKey())
             return 0;
-        file = open("/rsa", O_RDWR | O_CREAT);
+        file = open("/rsa", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IROTH);
         if (file == -1) {
             logEntry("Failed to create file to store generated RSA key", ENTITY_NAME, LogLevel::LOG_ERROR);
             return 0;
@@ -149,7 +150,7 @@ int getRsaKey() {
     }
 }
 
-int setRsaKey(char* key) {
+int setRsaKey(char* key, MessageSource source) {
     char header[] = "$Key: ";
     char* nStart = strstr(key, header);
 
@@ -173,13 +174,27 @@ int setRsaKey(char* key) {
     eStart++;
     stringToBytes(eStart, strlen(eStart), E, 128);
 
-    mbedtls_rsa_init(&rsaServer);
-    mbedtls_rsa_import_raw(&rsaServer, N, 128, NULL, 0, NULL, 0, NULL, 0, E, 128);
+    switch (source) {
+        case MessageSource::SERVER_ORVD:
+            mbedtls_rsa_init(&rsaServer);
+            mbedtls_rsa_import_raw(&rsaServer, N, 128, NULL, 0, NULL, 0, NULL, 0, E, 128);
+            break;
+        case MessageSource::PARTNER_DRONE:
+            mbedtls_rsa_init(&rsaTeammate);
+            mbedtls_rsa_import_raw(&rsaTeammate, N, 128, NULL, 0, NULL, 0, NULL, 0, E, 128);
+            break;
+        default: {
+            char logBuffer[256] = {0};
+            snprintf(logBuffer, 256, "Failed to set an RSA key. Unknown source type '%d'", source);
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
+    }
 
     return 1;
 }
 
-int checkMessageSignature(char* message, uint8_t &correct) {
+int checkMessageSignature(char* message, MessageSource source, uint8_t &correct) {
     correct = 0;
 
     char* signatureStart = strstr(message, "#");
@@ -213,7 +228,22 @@ int checkMessageSignature(char* message, uint8_t &correct) {
     uint8_t result[128] = {0};
     signatureStart++;
     stringToBytes(signatureStart, strlen(signatureStart), signature, 128);
-    if (mbedtls_rsa_public(&rsaServer, signature, result) != 0) {
+    int res = 0;
+    switch (source) {
+        case MessageSource::SERVER_ORVD:
+            res = mbedtls_rsa_public(&rsaServer, signature, result);
+            break;
+        case MessageSource::PARTNER_DRONE:
+            res = mbedtls_rsa_public(&rsaTeammate, signature, result);
+            break;
+        default: {
+            char logBuffer[256] = {0};
+            snprintf(logBuffer, 256, "Failed to check message signature. Unknown source type '%d'", source);
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
+    }
+    if (res != 0) {
         logEntry("Failed to decode server signature", ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }

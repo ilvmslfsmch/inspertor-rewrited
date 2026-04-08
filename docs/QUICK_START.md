@@ -41,14 +41,16 @@
 
 ## Запуск цифрового двойника
 
-Запускать цифровой двойник можно двумя способами. Для любого из способов необходимо клонировать репозиторий проекта и разместить в корневой директории SDK KasperskyOS версии 1.3:
+Запускать цифровой двойник можно двумя способами. Для любого из способов необходимо клонировать репозиторий проекта и разместить в корневой директории SDK KasperskyOS Community Edition версии 1.4:
+
+Скачать дистрибутив SDK для запуска в Qemu (459 МБ) с официального сайта -  https://os.kaspersky.ru/download-community-edition/ 
 
 ```bash
-# Клонирование репозитория с симулятором (вместо cyberimmunity-edu может быть fork)
+# Клонирование репозитория с симулятором (вместо официальной ссылки может быть собственный fork)
 git clone https://gitflic.ru/project/learning-cyberimmunity/cyberimmune-systems-autonomous-delivery-drone-with-kos.git
 
-# Размещение KasperskyOS CE SDK 1.3.0.166 в папке проекта
-cp ~/Downloads/KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166_ru.deb cyberimmune-systems-autonomous-delivery-drone-with-kos/
+# Размещение KasperskyOS CE SDK 1.4.0.102 в папке проекта
+cp ~/Downloads/KasperskyOS-Community-Edition-Qemu-1.4.0.102_ru.deb cyberimmune-systems-autonomous-delivery-drone-with-kos/
 ```
 
 ### Способ 1. Запуск цифрового двойника с использованием Docker

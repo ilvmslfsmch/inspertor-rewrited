@@ -7,6 +7,7 @@ ARG SDK_FOLDER_NAME
 
 ENV SDK_PKG_NAME=${SDK_PKG_NAME}
 ENV SDK_FOLDER_NAME=${SDK_FOLDER_NAME}
+ENV KOSCEDIR="/opt/${SDK_FOLDER_NAME}"
 
 ENV PATH="${PATH}:/opt/${SDK_FOLDER_NAME}/toolchain/bin:/home/user/.local/bin"
 RUN apt-get update && \

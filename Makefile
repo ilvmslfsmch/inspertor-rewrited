@@ -10,9 +10,9 @@
 ## KasperskyOS Community Edition SDK который можно скачать с сайта
 ## https://os.kaspersky.ru/development/
 ## Переменная SDK_FOLDER_NAME указывает имя папки в /opt где установлен SDK
-SDK_FOLDER_NAME=KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166
+SDK_FOLDER_NAME=KasperskyOS-Community-Edition-Qemu-1.4.0.102
 ## Переменная SDK_PKG_NAME указывает имя пакета с Kaspersky OS CE SDK
-SDK_PKG_NAME=KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166_ru.deb
+SDK_PKG_NAME=KasperskyOS-Community-Edition-Qemu-1.4.0.102_ru.deb
 ## -----------------------------------------------------------------------------
 
 # SDK_FOLDER_NAME=KasperskyOS-Community-Edition-RaspberryPi4b-wifi
@@ -32,6 +32,15 @@ docker-image: docker-image-simulator docker-image-orvd docker-image-mqtt-server 
 docker-image-simulator: ## Сборка образа docker с модулем безопасности
 	docker build ./ -t simulator --build-arg SDK_FOLDER_NAME=$(SDK_FOLDER_NAME) --build-arg SDK_PKG_NAME=$(SDK_PKG_NAME)
 
+docker-image-simulator-radxa: SDK_FOLDER_NAME=KasperskyOS-Community-Edition-RadxaRock3a-1.4.0.102
+docker-image-simulator-radxa: SDK_PKG_NAME=KasperskyOS-Community-Edition-RadxaRock3a-1.4.0.102_ru.deb
+docker-image-simulator-radxa:
+	docker build ./ -t simulator-radxa --build-arg SDK_FOLDER_NAME=$(SDK_FOLDER_NAME) --build-arg SDK_PKG_NAME=$(SDK_PKG_NAME)
+
+docker-image-simulator-rpi: SDK_FOLDER_NAME=KasperskyOS-Community-Edition-RaspberryPi4b-1.4.0.102
+docker-image-simulator-rpi: SDK_PKG_NAME=KasperskyOS-Community-Edition-RaspberryPi4b-1.4.0.102_ru.deb
+docker-image-simulator-rpi:
+	docker build ./ -t simulator-rpi --build-arg SDK_FOLDER_NAME=$(SDK_FOLDER_NAME) --build-arg SDK_PKG_NAME=$(SDK_PKG_NAME)
 docker-image-orvd: ## Сборка образа docker с ОрВД
 	docker build -f orvd.Dockerfile -t orvd ./
 

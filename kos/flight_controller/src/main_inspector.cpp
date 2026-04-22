@@ -340,11 +340,13 @@ int main(void) {
         int32_t latitude= 0;
         int32_t longitude = 0;
         int32_t altitude = 0;
+        float speed = 0.0f;
         if (getCoords(latitude, longitude, altitude)) {
+            getEstimatedSpeed(speed);
             double latitude_out = latitude / 10000000.0; //сделано для красоты вывода координат (в градусах формата xx.yyyyy...)
             double longitude_out = longitude / 10000000.0;
             double altitude_out = altitude / 100.0; //также сделано для красоты вывода (в метрах вместо сантиметров)
-            snprintf(logBuffer, sizeof(logBuffer), "Current Position: Latitude: %.7f, Longitude: %.7f, Altitude: %.2f", latitude_out, longitude_out, altitude_out );
+            snprintf(logBuffer, sizeof(logBuffer), "Current Position: Latitude: %.7f, Longitude: %.7f, Altitude: %.2f. Current speed: %.2f m/s.", latitude_out, longitude_out, altitude_out, speed );
             logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
         } else {
             logEntry("Failed to get coordinates", ENTITY_NAME, LogLevel::LOG_WARNING);
